@@ -36,3 +36,31 @@ Run vite server:
 npm run dev
 npm run build
 npx vite
+
+## API Environment Routing
+
+This app uses environment variables plus a centralized client for API routes.
+
+- Environment files:
+  - `.env.development` -> `VITE_API_BASE_URL=/api`
+  - `.env.test` -> test API URL
+  - `.env.production` -> production API URL
+  - `.env.example` -> template values
+- Route constants live in `src/api/routes.ts`
+- Shared request logic lives in `src/api/client.ts`
+
+### Development proxy
+
+`vite.config.ts` proxies `/api/*` to your backend target (`VITE_PROXY_TARGET`) and rewrites `/api`.
+
+Example: frontend calls `/api/auth/login` -> backend receives `/auth/login`.
+
+### PowerShell build note
+
+If your shell does not support `&&` in npm scripts, run:
+
+```powershell
+npx tsc -b
+npx vite build
+```
+
