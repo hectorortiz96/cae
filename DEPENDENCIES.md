@@ -66,6 +66,10 @@ The frontend is a **React + TypeScript** application built with **Vite**.
 
 | Package | Version | Description |
 |---------|---------|-------------|
+| `@emotion/react` | ^11.14.0 | CSS-in-JS library for React styling |
+| `@emotion/styled` | ^11.14.1 | Styled components for Emotion |
+| `@mui/icons-material` | ^9.4.0 | Material Design icons for MUI |
+| `@mui/material` | ^9.4.0 | Material UI component library |
 | `react` | ^19.2.8 | React library for building user interfaces |
 | `react-dom` | ^19.2.8 | React DOM rendering package |
 
@@ -159,25 +163,33 @@ reports/src/main/java/com/cae/reports/
 ├── controller/
 │   ├── AdminController.java        # Admin-only user management
 │   ├── AuthenticationController.java # Login/signup endpoints
+│   ├── ReportController.java       # Report CRUD endpoints
 │   └── UserController.java         # User endpoints
 ├── dto/
 │   ├── request/
 │   │   ├── LoginRequest.java
 │   │   ├── RegisterRequest.java
+│   │   ├── ReportRequest.java
 │   │   └── UpdateRoleRequest.java
 │   └── response/
 │       ├── LoginResponse.java
+│       ├── ReportResponse.java
 │       └── UserResponse.java
 ├── exceptions/
 │   └── GlobalExceptionHandler.java # Centralized error handling
 ├── model/
+│   ├── Grade.java                  # Grade level enum (1A-3C)
+│   ├── Report.java                 # Report entity
+│   ├── ReportType.java             # Report type enum (Observation, Report)
 │   ├── Role.java                   # USER, ADMIN enum
 │   └── User.java                   # User entity with UserDetails
 ├── repository/
+│   ├── ReportRepository.java
 │   └── UserRepository.java
 └── service/
     ├── AuthService.java            # Signup/login logic
     ├── JwtService.java             # JWT token operations
+    ├── ReportService.java          # Report CRUD operations
     └── UserService.java            # User operations
 ```
 
@@ -283,6 +295,21 @@ The frontend development server will start on `http://localhost:5173` (default V
 | PUT | `/admin/users/{id}/role` | Update user role |
 | DELETE | `/admin/users/{id}` | Delete user |
 
+### Reports (Authenticated)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/reports` | Create a new report |
+| GET | `/reports` | Get all reports |
+| GET | `/reports/{id}` | Get a report by ID |
+| GET | `/reports/me` | Get reports created by current user |
+| GET | `/reports/grade/{grade}` | Get reports by grade (e.g., 1A, 2B) |
+| GET | `/reports/type/{reportType}` | Get reports by type (OBSERVATION, REPORT) |
+| GET | `/reports/student/{studentName}` | Get reports by student name |
+| GET | `/reports/search?title={title}` | Search reports by title |
+| PUT | `/reports/{id}` | Update a report |
+| DELETE | `/reports/{id}` | Delete a report |
+
 ### Request/Response Examples
 
 **Register:**
@@ -326,6 +353,51 @@ The frontend development server will start on `http://localhost:5173` (default V
   "role": "ADMIN"
 }
 ```
+
+**Create Report:**
+```json
+// POST /reports
+// Header: Authorization: Bearer <token>
+{
+  "title": "Weekly Progress Report",
+  "content": "Student has shown great improvement...",
+  "studentName": "Jane Smith",
+  "grade": "GRADE_2A",
+  "reportType": "REPORT"
+}
+
+// Response
+{
+  "id": 1,
+  "title": "Weekly Progress Report",
+  "content": "Student has shown great improvement...",
+  "studentName": "Jane Smith",
+  "grade": "2A",
+  "reportType": "Reporte",
+  "createdBy": "john",
+  "createdAt": "2026-08-31T10:30:00.000+00:00",
+  "updatedAt": "2026-08-31T10:30:00.000+00:00"
+}
+```
+
+**Grade Values:**
+| Enum Value | Display Value |
+|------------|---------------|
+| `GRADE_1A` | 1A |
+| `GRADE_1B` | 1B |
+| `GRADE_1C` | 1C |
+| `GRADE_2A` | 2A |
+| `GRADE_2B` | 2B |
+| `GRADE_2C` | 2C |
+| `GRADE_3A` | 3A |
+| `GRADE_3B` | 3B |
+| `GRADE_3C` | 3C |
+
+**Report Type Values:**
+| Enum Value | Display Value |
+|------------|---------------|
+| `OBSERVATION` | Observación |
+| `REPORT` | Reporte |
 
 ---
 

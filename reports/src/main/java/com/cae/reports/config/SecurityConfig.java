@@ -54,6 +54,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // Enable CORS with the configured source
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // Disables CSRF protection (not needed for stateless JWT APIs)
                 .csrf(AbstractHttpConfigurer::disable)
                 // Defines which endpoints require authentication
@@ -120,12 +122,17 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        //Only this frontend can call API
-        configuration.setAllowedOrigins(List.of("http://localhost:8005"));
+        //Allow frontend origins (supports both development and production)
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",  // Vite default dev server
+                "http://localhost:8005"   // Alternative frontend port
+        ));
         //Only these HTTP methods allowed
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         //Only these headers allowed
         configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
+        //Allow credentials (cookies, authorization headers)
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         //Applies to all endpoints
