@@ -5,10 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class ReportRequest {
-    @NotBlank(message = "Title is required")
-    @Size(max = 200, message = "Title must not exceed 200 characters")
-    private String title;
-
     private String content;
 
     @NotBlank(message = "Student name is required")
@@ -24,21 +20,13 @@ public class ReportRequest {
     public ReportRequest() {
     }
 
-    public ReportRequest(String title, String content, String studentName, String grade, String reportType) {
-        this.title = title;
+    public ReportRequest(String content, String studentName, String grade, String reportType) {
         this.content = content;
         this.studentName = studentName;
         this.grade = grade;
         this.reportType = reportType;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     public String getContent() {
         return content;

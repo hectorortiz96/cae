@@ -12,7 +12,6 @@ export interface UserInfo {
 // Report types
 export interface Report {
   id: number
-  title: string
   content: string
   studentName: string
   grade: string
@@ -21,9 +20,23 @@ export interface Report {
   createdAt: string
 }
 
+export type ReportPdfFieldKey =
+  | 'id'
+  | 'studentName'
+  | 'grade'
+  | 'reportType'
+  | 'authorUsername'
+  | 'createdAt'
+  | 'content'
+
+export interface ReportPdfExportOptions {
+  includeFields?: ReportPdfFieldKey[]
+  title?: string
+  locale?: string
+}
+
 // Form data types
 export interface ReportFormData {
-  title: string
   content: string
   studentName: string
   grade: string

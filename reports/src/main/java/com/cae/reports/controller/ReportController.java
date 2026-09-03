@@ -49,6 +49,14 @@ public class ReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // GET /reports/public/{id} - Get a public report by ID
+    @GetMapping("/public/{id}")
+    public ResponseEntity<ReportResponse> getPublicReportById(@PathVariable Integer id) {
+        return reportService.getReportById(id)
+                .map(report -> ResponseEntity.ok(ReportResponse.fromReport(report)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // GET /reports/me - Get reports created by the current user
     @GetMapping("/me")
     public ResponseEntity<List<ReportResponse>> getMyReports() {
@@ -86,14 +94,6 @@ public class ReportController {
         return ResponseEntity.ok(reports);
     }
 
-    // GET /reports/search?title={title} - Search reports by title
-    @GetMapping("/search")
-    public ResponseEntity<List<ReportResponse>> searchReportsByTitle(@RequestParam String title) {
-        List<ReportResponse> reports = reportService.searchReportsByTitle(title).stream()
-                .map(ReportResponse::fromReport)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(reports);
-    }
 
     // PUT /reports/{id} - Update a report
     @PutMapping("/{id}")

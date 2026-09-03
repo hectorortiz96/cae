@@ -28,23 +28,32 @@ import {
   Logout,
   Description,
   Visibility,
+  Link as LinkIcon,
+  Group,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, logout } from '../utils/authUtils'
+import { copyPublicReportLink } from '../utils/publicReportLink'
 import type { UserInfo, Report } from '../types'
 
 interface DashboardPageProps {
   onLogout: () => void
   onCreateReport: () => void
-  onViewReport?: (reportId: number) => void
+  onViewReport: (reportId: number) => void
+  onViewUser: (userId: number) => void
 }
 
-export default function DashboardPage({ onLogout, onCreateReport, onViewReport }: DashboardPageProps) {
+export default function DashboardPage({ onLogout, onCreateReport, onViewReport, onViewUser }: DashboardPageProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [reports, setReports] = useState<Report[]>([])
+  const [adminUsers, setAdminUsers] = useState<UserInfo[]>([])
+  const [adminLoading, setAdminLoading] = useState(false)
+  const [adminError, setAdminError] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [shareMessage, setShareMessage] = useState<string>('')
+  const [shareError, setShareError] = useState<string>('')
 
   useEffect(() => {
     fetchDashboardData()
@@ -67,6 +76,35 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
 
       setUserInfo(userData)
       setReports(reportsData)
+
+      // Load admin users only for admin accounts.
+      if (userData.role === 'ADMIN') {
+        setAdminLoading(true)
+        setAdminError('')
+        try {
+          const usersData = await apiFetch<UserInfo[]>(API_ROUTES.admin.users, {
+            headers: getAuthHeader(),
+          })
+          setAdminUsers(usersData)
+        } catch (adminErr) {
+          if (adminErr instanceof ApiError) {
+            if (adminErr.status === 401) {
+              setError('Session expired. Please log in again.')
+              handleLogout()
+              return
+            }
+            if (adminErr.status === 403) {
+              setAdminError('You do not have permission to view users.')
+            } else {
+              setAdminError(adminErr.message)
+            }
+          } else {
+            setAdminError('Failed to load users list.')
+          }
+        } finally {
+          setAdminLoading(false)
+        }
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
@@ -82,6 +120,8 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
       setLoading(false)
     }
   }
+
+  const isCurrentUserAdmin = userInfo?.role === 'ADMIN'
 
   const handleLogout = () => {
     logout()
@@ -104,6 +144,18 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
         return 'primary'
       default:
         return 'default'
+    }
+  }
+
+  const handleCopyPublicLink = async (reportId: number) => {
+    setShareMessage('')
+    setShareError('')
+
+    try {
+      await copyPublicReportLink(reportId)
+      setShareMessage('Public link copied to clipboard.')
+    } catch {
+      setShareError('Failed to copy public link. Please try again.')
     }
   }
 
@@ -205,6 +257,95 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
           </Card>
         )}
 
+        {/* Admin Panel */}
+        {isCurrentUserAdmin && (
+          <Card sx={{ mb: 4, boxShadow: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  mb: 3,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Group color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    Admin Panel - Users
+                  </Typography>
+                  <Chip label={adminUsers.length} size="small" color="primary" />
+                </Box>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={fetchDashboardData}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Refresh
+                </Button>
+              </Box>
+
+              {adminError && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  {adminError}
+                </Alert>
+              )}
+
+              {adminLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress size={30} />
+                </Box>
+              ) : (
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Full Name</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Role</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Joined</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="center">
+                          Actions
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {adminUsers.map((user) => (
+                        <TableRow key={user.id} sx={{ '&:hover': { bgcolor: '#fafafa' } }}>
+                          <TableCell>{user.username}</TableCell>
+                          <TableCell>{user.fullName}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Chip
+                              label={user.role}
+                              color={getRoleColor(user.role) as any}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDate(user.createdAt)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="View User Details">
+                              <IconButton size="small" color="primary" onClick={() => onViewUser(user.id)}>
+                                <Visibility />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Reports Section */}
         <Card sx={{ boxShadow: 3 }}>
           <CardContent sx={{ p: 3 }}>
@@ -258,11 +399,23 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
                 </Button>
               </Box>
             ) : (
+              <>
+                {shareMessage && (
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    {shareMessage}
+                  </Alert>
+                )}
+
+                {shareError && (
+                  <Alert severity="warning" sx={{ mb: 2 }}>
+                    {shareError}
+                  </Alert>
+                )}
+
               <TableContainer component={Paper} variant="outlined">
                 <Table>
                   <TableHead>
                     <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Grade</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
@@ -278,20 +431,6 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
                         key={report.id}
                         sx={{ '&:hover': { bgcolor: '#fafafa' } }}
                       >
-                        <TableCell>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 500,
-                              maxWidth: 250,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {report.title}
-                          </Typography>
-                        </TableCell>
                         <TableCell>{report.studentName}</TableCell>
                         <TableCell>
                           <Chip label={report.grade} size="small" variant="outlined" />
@@ -300,7 +439,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
                           <Chip
                             label={report.reportType}
                             size="small"
-                            color={report.reportType === 'Reporte' ? 'warning' : 'info'}
+                            color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                           />
                         </TableCell>
                         <TableCell>
@@ -313,9 +452,18 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => onViewReport?.(report.id)}
+                              onClick={() => onViewReport(report.id)}
                             >
                               <Visibility />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Copy Public Link">
+                            <IconButton
+                              size="small"
+                              color="secondary"
+                              onClick={() => handleCopyPublicLink(report.id)}
+                            >
+                              <LinkIcon />
                             </IconButton>
                           </Tooltip>
                         </TableCell>
@@ -324,6 +472,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport }
                   </TableBody>
                 </Table>
               </TableContainer>
+              </>
             )}
           </CardContent>
         </Card>

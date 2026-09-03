@@ -21,7 +21,6 @@ public class ReportService {
 
     public Report createReport(ReportRequest request, User user) {
         Report report = new Report();
-        report.setTitle(request.getTitle());
         report.setContent(request.getContent());
         report.setStudentName(request.getStudentName());
         report.setGrade(Grade.fromValue(request.getGrade()));
@@ -55,10 +54,6 @@ public class ReportService {
         return reportRepository.findByStudentName(studentName);
     }
 
-    public List<Report> searchReportsByTitle(String title) {
-        return reportRepository.findByTitleContainingIgnoreCase(title);
-    }
-
     public Report updateReport(Integer id, ReportRequest request, User user) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
@@ -68,7 +63,6 @@ public class ReportService {
             throw new RuntimeException("You are not authorized to update this report");
         }
 
-        report.setTitle(request.getTitle());
         report.setContent(request.getContent());
         report.setStudentName(request.getStudentName());
         report.setGrade(Grade.fromValue(request.getGrade()));

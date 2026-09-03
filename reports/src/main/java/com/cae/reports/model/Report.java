@@ -15,9 +15,6 @@ public class Report {
     @Column(nullable = false)
     private Integer id;
 
-    @Column(name = "title", nullable = false, length = 200)
-    private String title;
-
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
@@ -48,9 +45,8 @@ public class Report {
     public Report() {
     }
 
-    public Report(Integer id, String title, String content, String studentName, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt) {
+    public Report(Integer id, String content, String studentName, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt) {
         this.id = id;
-        this.title = title;
         this.content = content;
         this.studentName = studentName;
         this.grade = grade;
@@ -68,13 +64,6 @@ public class Report {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
 
     public String getContent() {
         return content;
