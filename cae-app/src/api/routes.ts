@@ -6,14 +6,19 @@ export const API_ROUTES = {
   users: {
     me: '/users/me',
   },
+  admin: {
+    users: '/admin/users',
+    userById: (id: number) => `/admin/users/${id}`,
+    userReports: (id: number) => `/admin/users/${id}/reports`,
+  },
   reports: {
     base: '/reports',
     me: '/reports/me',
     byId: (id: number) => `/reports/${id}`,
+    publicById: (id: number) => `/reports/public/${id}`,
     byGrade: (grade: string) => `/reports/grade/${grade}`,
     byType: (type: string) => `/reports/type/${type}`,
     byStudent: (name: string) => `/reports/student/${name}`,
-    search: '/reports/search',
   },
 } as const
 

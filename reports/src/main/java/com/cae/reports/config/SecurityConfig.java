@@ -3,6 +3,7 @@ package com.cae.reports.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -60,8 +61,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 // Defines which endpoints require authentication
                 .authorizeHttpRequests(auth -> auth
+                        // Allow CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public endpoints for login and registration
                         .requestMatchers("/auth/**").permitAll()
+                        // Public read-only endpoint for sharing a single report
+                        .requestMatchers(HttpMethod.GET, "/reports/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reports/public/**").permitAll()
                         // Everything else requires auth
                         .anyRequest().authenticated()
                 )
@@ -128,7 +134,7 @@ public class SecurityConfig {
                 "http://localhost:8005"   // Alternative frontend port
         ));
         //Only these HTTP methods allowed
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         //Only these headers allowed
         configuration.setAllowedHeaders(List.of("Authorization","Content-Type"));
         //Allow credentials (cookies, authorization headers)

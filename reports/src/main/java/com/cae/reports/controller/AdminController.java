@@ -1,8 +1,10 @@
 package com.cae.reports.controller;
 
 import com.cae.reports.dto.request.UpdateRoleRequest;
+import com.cae.reports.dto.response.ReportResponse;
 import com.cae.reports.dto.response.UserResponse;
 import com.cae.reports.model.User;
+import com.cae.reports.repository.ReportRepository;
 import com.cae.reports.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,12 @@ import java.util.List;
 public class AdminController {
 
     private final UserRepository userRepository;
+    private final ReportRepository reportRepository;
 
-    public AdminController(UserRepository userRepository) {
+    public AdminController(UserRepository userRepository, ReportRepository reportRepository) {
 
         this.userRepository = userRepository;
+        this.reportRepository = reportRepository;
     }
 
     // GET /admin/users - Get all users
@@ -41,6 +45,20 @@ public class AdminController {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
         return ResponseEntity.ok(UserResponse.fromUser(user));
+    }
+
+    // GET /admin/users/{id}/reports - Get all reports created by a user
+    @GetMapping("/users/{id}/reports")
+    public ResponseEntity<List<ReportResponse>> getReportsByUserId(@PathVariable Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        List<ReportResponse> reports = reportRepository.findByUser(user)
+                .stream()
+                .map(ReportResponse::fromReport)
+                .toList();
+
+        return ResponseEntity.ok(reports);
     }
 
     // PUT /admin/users/{id}/role - Update user role

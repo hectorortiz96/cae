@@ -34,7 +34,6 @@ const REPORT_TYPES = [
 
 export default function CreateReportPage({ onBack, onSuccess }: CreateReportPageProps) {
   const [formData, setFormData] = useState<ReportFormData>({
-    title: '',
     content: '',
     studentName: '',
     grade: '',
@@ -65,12 +64,6 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
 
   const validateForm = (): boolean => {
     const newErrors: Partial<ReportFormData> = {}
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Title is required'
-    } else if (formData.title.length > 200) {
-      newErrors.title = 'Title must not exceed 200 characters'
-    }
 
     if (!formData.studentName.trim()) {
       newErrors.studentName = 'Student name is required'
@@ -178,22 +171,6 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         <Card sx={{ boxShadow: 3 }}>
           <CardContent sx={{ p: 4 }}>
             <Box component="form" onSubmit={handleSubmit} noValidate>
-              {/* Title */}
-              <Box sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  id="title"
-                  name="title"
-                  label="Report Title"
-                  variant="outlined"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  disabled={loading || success}
-                  error={!!errors.title}
-                  helperText={errors.title || `${formData.title.length}/200 characters`}
-                  placeholder="Enter a descriptive title for the report"
-                />
-              </Box>
 
               {/* Student Name */}
               <Box sx={{ mb: 3 }}>
