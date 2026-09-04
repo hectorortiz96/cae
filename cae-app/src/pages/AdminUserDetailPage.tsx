@@ -213,7 +213,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                   <TableBody>
                     {reports.map((report) => (
                       <TableRow key={report.id} sx={{ '&:hover': { bgcolor: '#fafafa' } }}>
-                        <TableCell>{report.studentName}</TableCell>
+                        <TableCell>{report.student}</TableCell>
                         <TableCell>
                           <Chip label={report.grade} size="small" variant="outlined" />
                         </TableCell>

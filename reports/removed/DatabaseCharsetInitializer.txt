@@ -1,0 +1,4 @@
+Retired. Database charset handling is limited to datasource configuration.
+
+
+

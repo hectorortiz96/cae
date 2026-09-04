@@ -113,14 +113,14 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
 
 function ReportPdfDocument({
   reportType,
-  studentName,
+  student,
   grade,
   authorName,
   createdAt,
   content,
 }: {
   reportType: string
-  studentName: string
+  student: string
   grade: string
   authorName: string
   createdAt: string
@@ -138,7 +138,7 @@ function ReportPdfDocument({
           <Text style={styles.title}>{reportType}</Text>
 
           <Text style={styles.text}>
-            Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{studentName}</Text>
+            Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text>
             &nbsp;en grado <Text style={styles.fieldValue}>{grade}</Text> muestra una actitud inapropiada en ciertas
             normas de convivencia descrito a continuacion:
           </Text>
@@ -179,7 +179,7 @@ export async function exportReportToPdf(report: Report, _options: ReportPdfExpor
   pdfInstance.updateContainer(
     <ReportPdfDocument
       reportType={report.reportType}
-      studentName={report.studentName}
+      student={report.student}
       grade={report.grade}
       authorName={currentUserFullName}
       createdAt={formatDate(report.createdAt)}

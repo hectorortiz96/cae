@@ -9,12 +9,21 @@ export interface UserInfo {
   updatedAt: string
 }
 
+export type Grade = '1A' | '1B' | '1C' | '2A' | '2B' | '2C' | '3A' | '3B' | '3C'
+
+export interface Student {
+  fullName: string
+  grade: Grade
+  contactemail1: string
+  contactemail2?: string | null
+}
+
 // Report types
 export interface Report {
   id: number
   content: string
-  studentName: string
-  grade: string
+  student: string
+  grade: Grade
   reportType: string
   authorUsername: string
   createdAt: string
@@ -22,7 +31,7 @@ export interface Report {
 
 export type ReportPdfFieldKey =
   | 'id'
-  | 'studentName'
+  | 'student'
   | 'grade'
   | 'reportType'
   | 'authorUsername'
@@ -38,8 +47,20 @@ export interface ReportPdfExportOptions {
 // Form data types
 export interface ReportFormData {
   content: string
-  studentName: string
+  student: string
   grade: string
   reportType: string
+}
+
+export interface StudentBatchImportRowError {
+  row: number
+  message: string
+}
+
+export interface StudentBatchImportResponse {
+  totalRows: number
+  createdRows: number
+  failedRows: number
+  errors: StudentBatchImportRowError[]
 }
 

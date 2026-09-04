@@ -18,7 +18,13 @@ export const API_ROUTES = {
     publicById: (id: number) => `/reports/public/${id}`,
     byGrade: (grade: string) => `/reports/grade/${grade}`,
     byType: (type: string) => `/reports/type/${type}`,
-    byStudent: (name: string) => `/reports/student/${name}`,
+    byStudent: (student: string) => `/reports/student/${student}`,
+  },
+  students: {
+    base: '/students',
+    import: '/students/import',
+    byGrade: (grade: string) => `/students/grade/${grade}`,
+    byName: (name: string) => `/students/name/${name}`,
   },
 } as const
 

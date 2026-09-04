@@ -85,10 +85,10 @@ public class ReportController {
         return ResponseEntity.ok(reports);
     }
 
-    // GET /reports/student/{studentName} - Get reports by student name
-    @GetMapping("/student/{studentName}")
-    public ResponseEntity<List<ReportResponse>> getReportsByStudentName(@PathVariable String studentName) {
-        List<ReportResponse> reports = reportService.getReportsByStudentName(studentName).stream()
+    // GET /reports/student/{student} - Get reports by student name
+    @GetMapping("/student/{student}")
+    public ResponseEntity<List<ReportResponse>> getReportsByStudent(@PathVariable String student) {
+        List<ReportResponse> reports = reportService.getReportsByStudent(student).stream()
                 .map(ReportResponse::fromReport)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reports);

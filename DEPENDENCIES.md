@@ -129,6 +129,12 @@ The backend is a **Spring Boot 4.1.1** application built with **Java 17** and **
 | `spring-boot-starter-webmvc` | Spring Web MVC for REST APIs |
 | `spring-boot-starter-validation` | Bean validation with Hibernate Validator |
 
+#### CSV Processing
+
+| Dependency | Version | Description |
+|------------|---------|-------------|
+| `commons-csv` | 1.11.0 | CSV parsing for batch student import |
+
 #### Database
 
 | Dependency | Version | Description |
@@ -158,12 +164,13 @@ reports/src/main/java/com/cae/reports/
 ├── ReportsApplication.java
 ├── config/
 │   ├── AppConfig.java              # Authentication beans
-│   ├── JwtAuthenticationFilter.java # JWT validation filter
+│   ├── JwtAuthFilter.java          # JWT validation filter
 │   └── SecurityConfig.java         # Security configuration
 ├── controller/
 │   ├── AdminController.java        # Admin-only user management
 │   ├── AuthenticationController.java # Login/signup endpoints
 │   ├── ReportController.java       # Report CRUD endpoints
+│   ├── StudentController.java      # Student CSV import endpoint
 │   └── UserController.java         # User endpoints
 ├── dto/
 │   ├── request/
@@ -174,6 +181,7 @@ reports/src/main/java/com/cae/reports/
 │   └── response/
 │       ├── LoginResponse.java
 │       ├── ReportResponse.java
+│       ├── StudentBatchImportResponse.java
 │       └── UserResponse.java
 ├── exceptions/
 │   └── GlobalExceptionHandler.java # Centralized error handling
@@ -182,14 +190,17 @@ reports/src/main/java/com/cae/reports/
 │   ├── Report.java                 # Report entity
 │   ├── ReportType.java             # Report type enum (Observation, Report)
 │   ├── Role.java                   # USER, ADMIN enum
+│   ├── Student.java                # Student entity
 │   └── User.java                   # User entity with UserDetails
 ├── repository/
 │   ├── ReportRepository.java
+│   ├── StudentRepository.java
 │   └── UserRepository.java
 └── service/
     ├── AuthService.java            # Signup/login logic
     ├── JwtService.java             # JWT token operations
     ├── ReportService.java          # Report CRUD operations
+    ├── StudentService.java         # Student CSV import logic
     └── UserService.java            # User operations
 ```
 
@@ -206,12 +217,14 @@ reports/src/main/java/com/cae/reports/
    
    Update `src/main/resources/application.properties` with your MySQL credentials:
    ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/local?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+   spring.datasource.url=jdbc:mysql://localhost:3306/local?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&useUnicode=true&connectionCollation=utf8mb4_unicode_ci
    spring.datasource.username=your_username
    spring.datasource.password=your_password
    ```
 
    > **Note:** The default configuration uses `root` as username. Update these values according to your local MySQL setup.
+
+   > **Encoding note:** Use `utf8mb4` for the database and tables so Spanish accents are stored correctly. The backend also runs `src/main/resources/schema.sql` on startup to convert the `student`, `report`, and `user` tables to `utf8mb4_unicode_ci`.
 
 4. **Create first admin user:**
    
@@ -284,7 +297,6 @@ The frontend development server will start on `http://localhost:5173` (default V
 | Method | Endpoint | Description | Required Role |
 |--------|----------|-------------|---------------|
 | GET | `/users/me` | Get current user | Any authenticated |
-| GET | `/users` | Get all users | Any authenticated |
 
 ### Admin (Admin Only)
 
@@ -292,6 +304,7 @@ The frontend development server will start on `http://localhost:5173` (default V
 |--------|----------|-------------|
 | GET | `/admin/users` | List all users |
 | GET | `/admin/users/{id}` | Get user by ID |
+| GET | `/admin/users/{id}/reports` | Get all reports for a user |
 | PUT | `/admin/users/{id}/role` | Update user role |
 | DELETE | `/admin/users/{id}` | Delete user |
 
@@ -302,13 +315,30 @@ The frontend development server will start on `http://localhost:5173` (default V
 | POST | `/reports` | Create a new report |
 | GET | `/reports` | Get all reports |
 | GET | `/reports/{id}` | Get a report by ID |
+| GET | `/reports/public/{id}` | Get a public report by ID |
 | GET | `/reports/me` | Get reports created by current user |
 | GET | `/reports/grade/{grade}` | Get reports by grade (e.g., 1A, 2B) |
-| GET | `/reports/type/{reportType}` | Get reports by type (OBSERVATION, REPORT) |
+| GET | `/reports/type/{reportType}` | Get reports by type (Observación, Reporte) |
 | GET | `/reports/student/{studentName}` | Get reports by student name |
-| GET | `/reports/search?title={title}` | Search reports by title |
 | PUT | `/reports/{id}` | Update a report |
 | DELETE | `/reports/{id}` | Delete a report |
+
+### Students
+
+| Method | Endpoint | Description | Required Role |
+|--------|----------|-------------|---------------|
+| GET | `/students/grade/{grade}` | Get students by grade (e.g., `1A`, `2B`) | Any authenticated |
+| GET | `/students/name/{name}` | Search students by name (case-insensitive contains) | Any authenticated |
+| POST | `/students/import` | Upload CSV to create students in batch | ADMIN |
+| DELETE | `/students` | Delete all student records | ADMIN |
+
+CSV format accepted by `/students/import`:
+
+- Optional header row: `fullName,grade,contactemail1,contactemail2`
+- Data rows must contain 3 or 4 columns: `fullName,grade,contactemail1[,contactemail2]`
+- `fullName` is normalized to name case on import (example: `jOHN DOE` -> `John Doe`)
+- Duplicate checking is based on `fullName` (case-insensitive) in file and in database
+- Upload CSVs in UTF-8 when possible.
 
 ### Request/Response Examples
 
@@ -359,24 +389,55 @@ The frontend development server will start on `http://localhost:5173` (default V
 // POST /reports
 // Header: Authorization: Bearer <token>
 {
-  "title": "Weekly Progress Report",
   "content": "Student has shown great improvement...",
   "studentName": "Jane Smith",
-  "grade": "GRADE_2A",
-  "reportType": "REPORT"
+  "grade": "2A",
+  "reportType": "Reporte"
 }
 
 // Response
 {
   "id": 1,
-  "title": "Weekly Progress Report",
   "content": "Student has shown great improvement...",
   "studentName": "Jane Smith",
   "grade": "2A",
   "reportType": "Reporte",
-  "createdBy": "john",
-  "createdAt": "2026-08-31T10:30:00.000+00:00",
-  "updatedAt": "2026-08-31T10:30:00.000+00:00"
+  "authorUsername": "john",
+  "createdAt": "2026-08-31T10:30:00.000+00:00"
+}
+```
+
+**Import Students (CSV):**
+```text
+POST /students/import
+Authorization: Bearer <admin_token>
+Content-Type: multipart/form-data
+file=<students.csv>
+```
+
+**Delete All Students:**
+```text
+DELETE /students
+Authorization: Bearer <admin_token>
+```
+
+```text
+Response: 204 No Content
+```
+
+```csv
+fullName,grade,contactemail1,contactemail2
+jOHN DOE,1A,john.doe@example.com,
+mary ann smith,2B,mary.smith@example.com,mary.parent@example.com
+```
+
+```json
+// Response
+{
+  "totalRows": 2,
+  "createdRows": 2,
+  "failedRows": 0,
+  "errors": []
 }
 ```
 
@@ -406,7 +467,7 @@ The frontend development server will start on `http://localhost:5173` (default V
 | Role | Description | Permissions |
 |------|-------------|-------------|
 | `USER` | Default role for new users | Access own profile, view users |
-| `ADMIN` | Administrator | Full user management (CRUD, role changes) |
+| `ADMIN` | Administrator | Full user management (CRUD, role changes), student batch import, and delete all students |
 
 ---
 

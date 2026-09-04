@@ -19,7 +19,7 @@ public class Report {
     private String content;
 
     @Column(name = "student_name", nullable = false, length = 150)
-    private String studentName;
+    private String student;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "grade", nullable = false, length = 10)
@@ -45,10 +45,10 @@ public class Report {
     public Report() {
     }
 
-    public Report(Integer id, String content, String studentName, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt) {
+    public Report(Integer id, String content, String student, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt) {
         this.id = id;
         this.content = content;
-        this.studentName = studentName;
+        this.student = student;
         this.grade = grade;
         this.reportType = reportType;
         this.user = user;
@@ -73,12 +73,12 @@ public class Report {
         this.content = content;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getStudent() {
+        return student;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setStudent(String student) {
+        this.student = student;
     }
 
     public Grade getGrade() {
