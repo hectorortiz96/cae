@@ -22,7 +22,7 @@ public class ReportService {
     public Report createReport(ReportRequest request, User user) {
         Report report = new Report();
         report.setContent(request.getContent());
-        report.setStudentName(request.getStudentName());
+        report.setStudent(request.getStudent());
         report.setGrade(Grade.fromValue(request.getGrade()));
         report.setReportType(ReportType.fromValue(request.getReportType()));
         report.setUser(user);
@@ -50,8 +50,8 @@ public class ReportService {
         return reportRepository.findByReportType(ReportType.fromValue(reportType));
     }
 
-    public List<Report> getReportsByStudentName(String studentName) {
-        return reportRepository.findByStudentName(studentName);
+    public List<Report> getReportsByStudent(String student) {
+        return reportRepository.findByStudent(student);
     }
 
     public Report updateReport(Integer id, ReportRequest request, User user) {
@@ -64,7 +64,7 @@ public class ReportService {
         }
 
         report.setContent(request.getContent());
-        report.setStudentName(request.getStudentName());
+        report.setStudent(request.getStudent());
         report.setGrade(Grade.fromValue(request.getGrade()));
         report.setReportType(ReportType.fromValue(request.getReportType()));
 

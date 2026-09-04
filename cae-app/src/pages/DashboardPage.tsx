@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import {
   Container,
   Box,
@@ -19,6 +19,10 @@ import {
   Paper,
   IconButton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
 import {
   Person,
@@ -30,12 +34,14 @@ import {
   Visibility,
   Link as LinkIcon,
   Group,
+  UploadFile,
+  DeleteForever,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, logout } from '../utils/authUtils'
 import { copyPublicReportLink } from '../utils/publicReportLink'
-import type { UserInfo, Report } from '../types'
+import type { UserInfo, Report, StudentBatchImportResponse } from '../types'
 
 interface DashboardPageProps {
   onLogout: () => void
@@ -54,6 +60,14 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
   const [error, setError] = useState<string>('')
   const [shareMessage, setShareMessage] = useState<string>('')
   const [shareError, setShareError] = useState<string>('')
+  const [studentActionMessage, setStudentActionMessage] = useState<string>('')
+  const [studentActionError, setStudentActionError] = useState<string>('')
+  const [studentImportSummary, setStudentImportSummary] = useState<StudentBatchImportResponse | null>(null)
+  const [importingStudents, setImportingStudents] = useState(false)
+  const [deletingStudents, setDeletingStudents] = useState(false)
+  const [showImportInfoDialog, setShowImportInfoDialog] = useState(false)
+  const [showDeleteWarningDialog, setShowDeleteWarningDialog] = useState(false)
+  const importFileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     fetchDashboardData()
@@ -156,6 +170,87 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
       setShareMessage('Public link copied to clipboard.')
     } catch {
       setShareError('Failed to copy public link. Please try again.')
+    }
+  }
+
+  const handleChooseImportFile = () => {
+    if (importingStudents || deletingStudents) {
+      return
+    }
+    setShowImportInfoDialog(true)
+  }
+
+  const handleConfirmImportDialog = () => {
+    setShowImportInfoDialog(false)
+    importFileInputRef.current?.click()
+  }
+
+  const handleImportStudents = async (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!selectedFile) {
+      return
+    }
+
+    setStudentActionMessage('')
+    setStudentActionError('')
+    setStudentImportSummary(null)
+    setImportingStudents(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+
+      const response = await apiFetch<StudentBatchImportResponse>(API_ROUTES.students.import, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: formData,
+      })
+
+      setStudentImportSummary(response)
+      setStudentActionMessage('Student import completed.')
+    } catch (importErr) {
+      if (importErr instanceof ApiError) {
+        setStudentActionError(importErr.message)
+      } else {
+        setStudentActionError('Failed to import students. Please try again.')
+      }
+    } finally {
+      setImportingStudents(false)
+    }
+  }
+
+  const handleDeleteAllStudents = async () => {
+    if (importingStudents || deletingStudents) {
+      return
+    }
+
+    setShowDeleteWarningDialog(true)
+  }
+
+  const executeDeleteAllStudents = async () => {
+    setShowDeleteWarningDialog(false)
+
+    setStudentActionMessage('')
+    setStudentActionError('')
+    setStudentImportSummary(null)
+    setDeletingStudents(true)
+
+    try {
+      await apiFetch<null>(API_ROUTES.students.base, {
+        method: 'DELETE',
+        headers: getAuthHeader(),
+      })
+      setStudentActionMessage('All student records were deleted.')
+    } catch (deleteErr) {
+      if (deleteErr instanceof ApiError) {
+        setStudentActionError(deleteErr.message)
+      } else {
+        setStudentActionError('Failed to delete student records. Please try again.')
+      }
+    } finally {
+      setDeletingStudents(false)
     }
   }
 
@@ -289,6 +384,63 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
               {adminError && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                   {adminError}
+                </Alert>
+              )}
+
+              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={importingStudents ? <CircularProgress size={16} color="inherit" /> : <UploadFile />}
+                  onClick={handleChooseImportFile}
+                  disabled={importingStudents || deletingStudents}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {importingStudents ? 'Importing...' : 'Import Students CSV'}
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={deletingStudents ? <CircularProgress size={16} color="inherit" /> : <DeleteForever />}
+                  onClick={handleDeleteAllStudents}
+                  disabled={importingStudents || deletingStudents}
+                  sx={{ textTransform: 'none' }}
+                >
+                  {deletingStudents ? 'Deleting...' : 'Delete All Students'}
+                </Button>
+
+                <input
+                  ref={importFileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleImportStudents}
+                  style={{ display: 'none' }}
+                />
+              </Box>
+
+              {studentActionMessage && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {studentActionMessage}
+                </Alert>
+              )}
+
+              {studentActionError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {studentActionError}
+                </Alert>
+              )}
+
+              {studentImportSummary && (
+                <Alert severity={studentImportSummary.failedRows > 0 ? 'warning' : 'success'} sx={{ mb: 2 }}>
+                  Imported {studentImportSummary.createdRows} of {studentImportSummary.totalRows} rows. Failed:{' '}
+                  {studentImportSummary.failedRows}.
+                  {studentImportSummary.errors.length > 0 && (
+                    <>
+                      {' '}
+                      First error (row {studentImportSummary.errors[0].row}): {studentImportSummary.errors[0].message}
+                    </>
+                  )}
                 </Alert>
               )}
 
@@ -431,7 +583,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                         key={report.id}
                         sx={{ '&:hover': { bgcolor: '#fafafa' } }}
                       >
-                        <TableCell>{report.studentName}</TableCell>
+                        <TableCell>{report.student}</TableCell>
                         <TableCell>
                           <Chip label={report.grade} size="small" variant="outlined" />
                         </TableCell>
@@ -476,6 +628,58 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={showImportInfoDialog} onClose={() => setShowImportInfoDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>CSV Import Format</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Use an optional header row:
+            </Typography>
+            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, mb: 2 }}>
+              fullName,grade,contactemail1,contactemail2
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Each data row must have 3 or 4 columns:
+            </Typography>
+            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1 }}>
+              fullName,grade,contactemail1[,contactemail2]
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowImportInfoDialog(false)} sx={{ textTransform: 'none' }}>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleConfirmImportDialog} sx={{ textTransform: 'none' }}>
+              Choose CSV File
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={showDeleteWarningDialog} onClose={() => setShowDeleteWarningDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Delete All Students?</DialogTitle>
+          <DialogContent>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              This action permanently deletes all student records and cannot be undone.
+            </Alert>
+            <Typography variant="body2">
+              Only continue if you are sure you want to remove every student.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowDeleteWarningDialog(false)} sx={{ textTransform: 'none' }}>
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={executeDeleteAllStudents}
+              disabled={deletingStudents}
+              sx={{ textTransform: 'none' }}
+            >
+              Delete All Students
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Container>
   )

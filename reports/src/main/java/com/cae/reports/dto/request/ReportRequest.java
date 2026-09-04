@@ -9,7 +9,7 @@ public class ReportRequest {
 
     @NotBlank(message = "Student name is required")
     @Size(max = 150, message = "Student name must not exceed 150 characters")
-    private String studentName;
+    private String student;
 
     @NotNull(message = "Grade is required")
     private String grade;
@@ -20,9 +20,9 @@ public class ReportRequest {
     public ReportRequest() {
     }
 
-    public ReportRequest(String content, String studentName, String grade, String reportType) {
+    public ReportRequest(String content, String student, String grade, String reportType) {
         this.content = content;
-        this.studentName = studentName;
+        this.student = student;
         this.grade = grade;
         this.reportType = reportType;
     }
@@ -36,12 +36,12 @@ public class ReportRequest {
         this.content = content;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getStudent() {
+        return student;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setStudent(String student) {
+        this.student = student;
     }
 
     public String getGrade() {

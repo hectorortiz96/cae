@@ -26,7 +26,7 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> findByUser(User user);
 
     @EntityGraph(attributePaths = "user")
-    List<Report> findByStudentName(String studentName);
+    List<Report> findByStudent(String student);
 
     @EntityGraph(attributePaths = "user")
     List<Report> findByGrade(Grade grade);

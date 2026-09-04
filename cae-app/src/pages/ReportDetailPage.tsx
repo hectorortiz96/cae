@@ -241,10 +241,10 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               <Divider sx={{ mb: 3 }} />
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                Student Name
+                Student
               </Typography>
               <Typography variant="body1" sx={{ mb: 3 }}>
-                {report.studentName}
+                {report.student}
               </Typography>
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>

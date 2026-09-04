@@ -7,7 +7,7 @@ import java.util.Date;
 public class ReportResponse {
     private Integer id;
     private String content;
-    private String studentName;
+    private String student;
     private String grade;
     private String reportType;
     private String authorUsername;
@@ -16,10 +16,10 @@ public class ReportResponse {
     public ReportResponse() {
     }
 
-    public ReportResponse(Integer id, String content, String studentName, String grade, String reportType, String authorUsername, Date createdAt) {
+    public ReportResponse(Integer id, String content, String student, String grade, String reportType, String authorUsername, Date createdAt) {
         this.id = id;
         this.content = content;
-        this.studentName = studentName;
+        this.student = student;
         this.grade = grade;
         this.reportType = reportType;
         this.authorUsername = authorUsername;
@@ -31,7 +31,7 @@ public class ReportResponse {
         return new ReportResponse(
                 report.getId(),
                 report.getContent(),
-                report.getStudentName(),
+                report.getStudent(),
                 report.getGrade().getValue(),
                 report.getReportType().getValue(),
                 report.getUser().getUsername(),
@@ -56,12 +56,12 @@ public class ReportResponse {
         this.content = content;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public String getStudent() {
+        return student;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setStudent(String student) {
+        this.student = student;
     }
 
     public String getGrade() {
