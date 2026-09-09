@@ -26,7 +26,8 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     List<Report> findByUser(User user);
 
     @EntityGraph(attributePaths = "user")
-    List<Report> findByStudent(String student);
+    List<Report> findByStudentContainingIgnoreCase(String student);
+
 
     @EntityGraph(attributePaths = "user")
     List<Report> findByGrade(Grade grade);
@@ -40,4 +41,3 @@ public interface ReportRepository extends JpaRepository<Report, Integer> {
     @EntityGraph(attributePaths = "user")
     List<Report> findByUserAndReportType(User user, ReportType reportType);
 }
-

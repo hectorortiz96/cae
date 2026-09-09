@@ -142,24 +142,26 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ py: { xs: 2, sm: 4 } }}>
         <Box
           sx={{
             display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 1.5,
             mb: 3,
           }}
         >
-          <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none' }}>
+          <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
             Back to Dashboard
           </Button>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             <Button
               variant="outlined"
               startIcon={<LinkIcon />}
               onClick={handleCopyPublicLink}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
             >
               Copy Public Link
             </Button>
@@ -168,7 +170,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               startIcon={<FileDownload />}
               onClick={handleExportPdf}
               disabled={!report || exportingPdf}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
             >
               {exportingPdf ? 'Exporting PDF...' : 'Export PDF'}
             </Button>
@@ -177,7 +179,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               color="error"
               startIcon={<Logout />}
               onClick={handleLogout}
-              sx={{ textTransform: 'none' }}
+              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
             >
               Logout
             </Button>
@@ -218,10 +220,10 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
 
         {!error && report && (
           <Card sx={{ boxShadow: 3 }}>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Description color="primary" />
-                <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
                   Report Details
                 </Typography>
               </Box>

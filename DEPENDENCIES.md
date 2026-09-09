@@ -70,8 +70,10 @@ The frontend is a **React + TypeScript** application built with **Vite**.
 | `@emotion/styled` | ^11.14.1 | Styled components for Emotion |
 | `@mui/icons-material` | ^9.4.0 | Material Design icons for MUI |
 | `@mui/material` | ^9.4.0 | Material UI component library |
+| `@react-pdf/renderer` | ^4.3.1 | PDF rendering library used for report export |
 | `react` | ^19.2.8 | React library for building user interfaces |
 | `react-dom` | ^19.2.8 | React DOM rendering package |
+| `react-router-dom` | ^7.18.3 | Client-side routing for React pages |
 
 #### Development Dependencies
 
@@ -81,6 +83,7 @@ The frontend is a **React + TypeScript** application built with **Vite**.
 | `@types/react` | ^19.2.18 | TypeScript definitions for React |
 | `@types/react-dom` | ^19.2.4 | TypeScript definitions for React DOM |
 | `@vitejs/plugin-react` | ^6.1.0 | Vite plugin for React |
+| `npm-run-all` | ^4.1.5 | Run npm scripts sequentially/parallel (used in build pipeline) |
 | `oxlint` | ^1.79.0 | Fast JavaScript/TypeScript linter |
 | `typescript` | ~6.0.2 | TypeScript compiler |
 | `vite` | ^8.2.2 | Next-generation frontend build tool |
@@ -102,7 +105,13 @@ The frontend is a **React + TypeScript** application built with **Vite**.
    # Start development server
    npm run dev
 
-   # Build for production
+   # Run TypeScript project checks
+   npm run typecheck
+
+   # Build app bundle only
+   npm run build:app
+
+   # Full production build (typecheck + app build)
    npm run build
 
    # Run linter
@@ -128,6 +137,7 @@ The backend is a **Spring Boot 4.1.1** application built with **Java 17** and **
 | `spring-boot-starter-security` | Spring Security for authentication/authorization |
 | `spring-boot-starter-webmvc` | Spring Web MVC for REST APIs |
 | `spring-boot-starter-validation` | Bean validation with Hibernate Validator |
+| `spring-boot-starter-mail` | Email delivery support for report notifications |
 
 #### CSV Processing
 
@@ -182,6 +192,7 @@ reports/src/main/java/com/cae/reports/
 │       ├── LoginResponse.java
 │       ├── ReportResponse.java
 │       ├── StudentBatchImportResponse.java
+│       ├── StudentResponse.java
 │       └── UserResponse.java
 ├── exceptions/
 │   └── GlobalExceptionHandler.java # Centralized error handling
@@ -198,6 +209,7 @@ reports/src/main/java/com/cae/reports/
 │   └── UserRepository.java
 └── service/
     ├── AuthService.java            # Signup/login logic
+    ├── EmailNotificationService.java # Sends report-created emails to student contacts
     ├── JwtService.java             # JWT token operations
     ├── ReportService.java          # Report CRUD operations
     ├── StudentService.java         # Student CSV import logic
@@ -327,8 +339,8 @@ The frontend development server will start on `http://localhost:5173` (default V
 
 | Method | Endpoint | Description | Required Role |
 |--------|----------|-------------|---------------|
-| GET | `/students/grade/{grade}` | Get students by grade (e.g., `1A`, `2B`) | Any authenticated |
-| GET | `/students/name/{name}` | Search students by name (case-insensitive contains) | Any authenticated |
+| GET | `/students/grade/{grade}` | Get students by grade (e.g., `1A`, `2B`) and return `StudentResponse` DTOs with display-grade values | Any authenticated |
+| GET | `/students/name/{name}` | Search students by name (case-insensitive contains) and return `StudentResponse` DTOs with display-grade values | Any authenticated |
 | POST | `/students/import` | Upload CSV to create students in batch | ADMIN |
 | DELETE | `/students` | Delete all student records | ADMIN |
 
@@ -339,6 +351,8 @@ CSV format accepted by `/students/import`:
 - `fullName` is normalized to name case on import (example: `jOHN DOE` -> `John Doe`)
 - Duplicate checking is based on `fullName` (case-insensitive) in file and in database
 - Upload CSVs in UTF-8 when possible.
+
+Student list responses use `StudentResponse` DTOs so the frontend receives the display grade directly (for example, `1C` instead of `GRADE_1C`). The secondary email field is included only when present.
 
 ### Request/Response Examples
 
@@ -484,6 +498,28 @@ For production deployments, consider using environment variables instead of hard
 | `SPRING_DATASOURCE_PASSWORD` | Database password | `your_password` |
 | `SECURITY_JWT_SECRET_KEY` | JWT signing key (256-bit) | Base64 encoded key |
 | `SECURITY_JWT_EXPIRATION_TIME` | Token expiration (ms) | `3600000` |
+| `MAIL_HOST` | SMTP host | `smtp.gmail.com` |
+| `MAIL_PORT` | SMTP port | `587` |
+| `MAIL_USERNAME` | SMTP username | `your_email@example.com` |
+| `MAIL_PASSWORD` | SMTP password or app password | `your_app_password` |
+| `MAIL_SMTP_AUTH` | Enable SMTP auth | `true` |
+| `MAIL_SMTP_STARTTLS` | Enable STARTTLS | `true` |
+| `APP_MAIL_FROM` | From address for report emails | `no-reply@example.com` |
+| `APP_MAIL_ENABLED` | Enable/disable report-created email notifications | `true` |
+| `APP_PUBLIC_REPORT_BASE_URL` | Frontend base URL used in emailed public report links | `http://localhost:5173` |
+
+### Profile Strategy (Recommended)
+
+- Keep `application.properties` committed with placeholders only.
+- Use `SPRING_PROFILES_ACTIVE=dev|prod` to switch non-secret defaults.
+- Keep real secrets in local env vars, deployment platform variables, or GitHub Environments.
+- Use `reports/.env.example` as the template for local setup.
+
+### GitHub Environments
+
+- Create `dev`, `staging`, and `prod` environments in GitHub.
+- Store sensitive values as environment secrets (database password, JWT key, SMTP credentials).
+- Inject secrets as runtime environment variables during deployment.
 
 ---
 

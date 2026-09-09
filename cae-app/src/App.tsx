@@ -9,6 +9,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const CreateReportPage = lazy(() => import('./pages/CreateReportPage'))
 const ReportDetailPage = lazy(() => import('./pages/ReportDetailPage'))
+const ReportSearchPage = lazy(() => import('./pages/ReportSearchPage'))
 const AdminUserDetailPage = lazy(() => import('./pages/AdminUserDetailPage'))
 const PublicReportDetailPage = lazy(() => import('./pages/PublicReportDetailPage'))
 
@@ -56,6 +57,7 @@ const DashboardRoute = () => {
       onCreateReport={() => navigate('/reports/new')}
       onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
       onViewUser={(userId) => navigate(`/admin/users/${userId}`)}
+      onSearchReports={() => navigate('/reports/search')}
     />
   )
 }
@@ -85,6 +87,18 @@ const ReportDetailRoute = () => {
       reportId={parsedReportId}
       onBack={() => navigate('/dashboard')}
       onLogout={() => navigate('/login', { replace: true })}
+    />
+  )
+}
+
+const ReportSearchRoute = () => {
+  const navigate = useNavigate()
+
+  return (
+    <ReportSearchPage
+      onBack={() => navigate('/dashboard')}
+      onLogout={() => navigate('/login', { replace: true })}
+      onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
     />
   )
 }
@@ -171,6 +185,14 @@ function App() {
             element={
               <RequireAuth>
                 <ReportDetailRoute />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/reports/search"
+            element={
+              <RequireAuth>
+                <ReportSearchRoute />
               </RequireAuth>
             }
           />

@@ -17,6 +17,10 @@ public class ReportRequest {
     @NotNull(message = "Report type is required")
     private String reportType;
 
+    private String pdfBase64;
+    private String pdfFileName;
+    private String pdfMimeType;
+
     public ReportRequest() {
     }
 
@@ -25,6 +29,24 @@ public class ReportRequest {
         this.student = student;
         this.grade = grade;
         this.reportType = reportType;
+    }
+
+    public ReportRequest(
+            String content,
+            String student,
+            String grade,
+            String reportType,
+            String pdfBase64,
+            String pdfFileName,
+            String pdfMimeType
+    ) {
+        this.content = content;
+        this.student = student;
+        this.grade = grade;
+        this.reportType = reportType;
+        this.pdfBase64 = pdfBase64;
+        this.pdfFileName = pdfFileName;
+        this.pdfMimeType = pdfMimeType;
     }
 
 
@@ -58,6 +80,30 @@ public class ReportRequest {
 
     public void setReportType(String reportType) {
         this.reportType = reportType;
+    }
+
+    public String getPdfBase64() {
+        return pdfBase64;
+    }
+
+    public void setPdfBase64(String pdfBase64) {
+        this.pdfBase64 = pdfBase64;
+    }
+
+    public String getPdfFileName() {
+        return pdfFileName;
+    }
+
+    public void setPdfFileName(String pdfFileName) {
+        this.pdfFileName = pdfFileName;
+    }
+
+    public String getPdfMimeType() {
+        return pdfMimeType;
+    }
+
+    public void setPdfMimeType(String pdfMimeType) {
+        this.pdfMimeType = pdfMimeType;
     }
 }
 

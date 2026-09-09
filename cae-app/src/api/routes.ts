@@ -14,11 +14,12 @@ export const API_ROUTES = {
   reports: {
     base: '/reports',
     me: '/reports/me',
+    searchByStudent: (studentName: string) => `/reports/search?studentName=${encodeURIComponent(studentName)}`,
     byId: (id: number) => `/reports/${id}`,
     publicById: (id: number) => `/reports/public/${id}`,
     byGrade: (grade: string) => `/reports/grade/${grade}`,
     byType: (type: string) => `/reports/type/${type}`,
-    byStudent: (student: string) => `/reports/student/${student}`,
+    byStudent: (student: string) => `/reports/student/${encodeURIComponent(student)}`,
   },
   students: {
     base: '/students',
@@ -27,4 +28,3 @@ export const API_ROUTES = {
     byName: (name: string) => `/students/name/${name}`,
   },
 } as const
-
