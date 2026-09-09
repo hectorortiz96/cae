@@ -109,9 +109,9 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none' }}>
+      <Box sx={{ py: { xs: 2, sm: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, mb: 3 }}>
+          <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
             Back
           </Button>
         </Box>
@@ -138,10 +138,10 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
 
         {!error && report && (
           <Card sx={{ boxShadow: 3 }}>
-            <CardContent sx={{ p: 4 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Description color="primary" />
-                <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
                   Report Details
                 </Typography>
               </Box>
@@ -168,7 +168,7 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
                 startIcon={<FileDownload />}
                 onClick={handleExportPdf}
                 disabled={exportingPdf}
-                sx={{ textTransform: 'none', mb: 3 }}
+                sx={{ textTransform: 'none', mb: 3, width: { xs: '100%', sm: 'auto' } }}
               >
                 {exportingPdf ? 'Exporting PDF...' : 'Export PDF'}
               </Button>

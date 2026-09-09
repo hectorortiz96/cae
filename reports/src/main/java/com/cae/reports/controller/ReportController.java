@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequestMapping("/reports")
@@ -42,7 +43,7 @@ public class ReportController {
     }
 
     // GET /reports/{id} - Get a report by ID
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<ReportResponse> getReportById(@PathVariable Integer id) {
         return reportService.getReportById(id)
                 .map(report -> ResponseEntity.ok(ReportResponse.fromReport(report)))
@@ -50,7 +51,7 @@ public class ReportController {
     }
 
     // GET /reports/public/{id} - Get a public report by ID
-    @GetMapping("/public/{id}")
+    @GetMapping("/public/{id:\\d+}")
     public ResponseEntity<ReportResponse> getPublicReportById(@PathVariable Integer id) {
         return reportService.getReportById(id)
                 .map(report -> ResponseEntity.ok(ReportResponse.fromReport(report)))
@@ -62,6 +63,20 @@ public class ReportController {
     public ResponseEntity<List<ReportResponse>> getMyReports() {
         User currentUser = getCurrentUser();
         List<ReportResponse> reports = reportService.getReportsByUser(currentUser).stream()
+                .map(ReportResponse::fromReport)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(reports);
+    }
+
+    // GET /reports/search?studentName=... - Search all reports by student name
+    @GetMapping("/search")
+    public ResponseEntity<List<ReportResponse>> searchReportsByStudent(@RequestParam String studentName) {
+        String normalizedStudentName = studentName == null ? "" : studentName.trim();
+        if (normalizedStudentName.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<ReportResponse> reports = reportService.searchReportsByStudent(normalizedStudentName).stream()
                 .map(ReportResponse::fromReport)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(reports);
@@ -96,7 +111,7 @@ public class ReportController {
 
 
     // PUT /reports/{id} - Update a report
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public ResponseEntity<ReportResponse> updateReport(@PathVariable Integer id, @Valid @RequestBody ReportRequest request) {
         User currentUser = getCurrentUser();
         Report report = reportService.updateReport(id, request, currentUser);
@@ -104,7 +119,7 @@ public class ReportController {
     }
 
     // DELETE /reports/{id} - Delete a report
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public ResponseEntity<Void> deleteReport(@PathVariable Integer id) {
         User currentUser = getCurrentUser();
         reportService.deleteReport(id, currentUser);
@@ -112,8 +127,14 @@ public class ReportController {
     }
 
     private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (User) authentication.getPrincipal();
+        Authentication authentication = Objects.requireNonNull(
+                SecurityContextHolder.getContext().getAuthentication(),
+                "Authentication is required"
+        );
+        Object principal = Objects.requireNonNull(authentication.getPrincipal(), "Authenticated principal is required");
+        if (!(principal instanceof User user)) {
+            throw new IllegalStateException("Authenticated principal is invalid");
+        }
+        return user;
     }
 }
-

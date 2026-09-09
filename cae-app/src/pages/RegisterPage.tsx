@@ -108,12 +108,12 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
     <Container maxWidth="sm">
       <Box
         sx={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          py: 4,
+          py: { xs: 2, sm: 4 },
         }}
       >
         <Card
@@ -123,7 +123,7 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
             borderRadius: 2,
           }}
         >
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ p: { xs: 2.5, sm: 4 } }}>
             {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 3 }}>
               <Box
@@ -140,7 +140,7 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
               >
                 <ManageAccounts sx={{ color: 'white', fontSize: 28 }} />
               </Box>
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1 }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
                 Create Account
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -289,13 +289,15 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
         {/* Info Text */}
         <Box
           sx={{
-            mt: 4,
+            mt: { xs: 2.5, sm: 4 },
             p: 2,
             backgroundColor: '#f5f5f5',
             borderRadius: 1,
             maxWidth: '100%',
             fontSize: '0.85rem',
             color: 'text.secondary',
+            textAlign: 'left',
+            wordBreak: 'break-word',
           }}
         >
           <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>

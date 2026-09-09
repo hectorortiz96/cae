@@ -4,6 +4,12 @@ import type { Report, ReportPdfExportOptions } from '../types'
 import { getUser } from './authUtils'
 import logoImage from '../assets/cae_logo.png'
 
+interface ReportPdfFile {
+  blob: Blob
+  fileName: string
+  mimeType: string
+}
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 100,
@@ -54,6 +60,12 @@ const styles = StyleSheet.create({
   },
   text: {
     margin: 10,
+  },
+  reportTypeNotice: {
+    marginHorizontal: 10,
+    marginBottom: 12,
+    fontWeight: 'bold',
+    textDecoration: 'underline',
   },
   contentBox: {
     borderWidth: 2,
@@ -111,6 +123,42 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
   URL.revokeObjectURL(url)
 }
 
+function getMessageByReportType(reportType: string) {
+  if (reportType === 'Observación') {
+    return (
+        <>
+          <Text style={styles.warning}>
+          3 OBSERVACIONES ACUMULADAS POR CUALQUIER CAUSA SE CONVIERTEN EN 1 REPORTE DISCIPLINARIO.
+          </Text>
+          <Text style={styles.text}>
+          Se aplicarian las Medidas Disciplinarias del Articulo 36 del Reglamento de Disciplina Escolar de la SEP.
+          </Text>
+          <Text style={styles.disclaimer}>
+            AGRADECEMOS SU APOYO QUE FAVORECERÁ LA RESPONSABILIDAD
+            Y SANA CONVIVENCIA DE NUESTROS ALUMNOS. DIALOGUEN EN FAMILIA.
+          </Text></>
+    )
+  }
+  else if (reportType === 'Reporte') {
+    return (
+        <><Text style={styles.warning}>
+          3 REPORTES ACUMULADOS:
+          </Text>
+          <Text style={styles.text}>
+          Aplica asignación de actividades académicas adicionales bajo supervisión fuera del grupo,
+          en horario escolar o extraescolar, de 1 a 10 días, según lo establecido en las Medidas Disciplinarias
+          del Artículo 36 del Reglamento de Disciplina Escolar de la SEP,
+          se aplica dependiendo de la gravedad de la acción.
+          </Text>
+          <Text style={styles.disclaimer}>
+            AGRADECEMOS SU APOYO Y EL QUE NOS PERMITAN SER PARTÍCIPES EN LA
+            FORMACIÓN DE SU HIJO(A). DIALOGUEN EN FAMILIA.
+          </Text>
+        </>
+    )
+  }
+}
+
 function ReportPdfDocument({
   reportType,
   student,
@@ -133,14 +181,16 @@ function ReportPdfDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.contentFrame}>
           <Image src={logoImage} style={styles.logo} />
-          <Text style={styles.title}>{"Colegio Anglo Español"}</Text>
-          <Text style={styles.title}>{"Secundaria"}</Text>
+          <Text style={styles.title}>Colegio Anglo Español</Text>
+          <Text style={styles.title}>Secundaria</Text>
           <Text style={styles.title}>{reportType}</Text>
 
+          <Text style={styles.text}>Fecha de reporte: {createdAt}</Text>
+
           <Text style={styles.text}>
-            Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text>
-            &nbsp;en grado <Text style={styles.fieldValue}>{grade}</Text> muestra una actitud inapropiada en ciertas
-            normas de convivencia descrito a continuacion:
+            Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text> en grado{' '}
+            <Text style={styles.fieldValue}>{grade}</Text> muestra una actitud inapropiada en ciertas normas de
+            convivencia descrito a continuacion:
           </Text>
 
           <Text style={styles.contentBox}>{content}</Text>
@@ -149,22 +199,17 @@ function ReportPdfDocument({
             Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
             del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
           </Text>
-
-          <Text style={styles.disclaimer}>
-            Agradecemos su apoyo que favorecerá la responsabilidad y sana convivencia de nuestros alumnos.
-            Dialoguen en familia
+          <Text style={styles.reportTypeNotice}>
+            La conducta tiene un valor del 10% en la calificacion de cada materia.
           </Text>
 
-          <Text style={styles.warning}>
-            3 Observaciones amerita 1 reporte disciplinario
-          </Text>
+          {getMessageByReportType(reportType)}
 
           <Text style={styles.text}>
             Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
           </Text>
 
-          <Text style={styles.fieldValue}>{createdAt}</Text>
-          <Text style={styles.date}>Generated at {generatedAt}</Text>
+          <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
 
         </View>
       </Page>
@@ -173,6 +218,11 @@ function ReportPdfDocument({
 }
 
 export async function exportReportToPdf(report: Report, _options: ReportPdfExportOptions = {}) {
+  const { blob, fileName } = await buildReportPdfFile(report)
+  triggerBlobDownload(blob, fileName)
+}
+
+export async function buildReportPdfFile(report: Report, fileNameOverride?: string): Promise<ReportPdfFile> {
   const currentUserFullName = getUser()?.fullName?.trim() || report.authorUsername
 
   const pdfInstance = pdf()
@@ -186,10 +236,16 @@ export async function exportReportToPdf(report: Report, _options: ReportPdfExpor
       content={report.content || 'No content provided.'}
     />,
   )
+
   const createBlob = pdfInstance.toBlob as unknown as () => Promise<Blob>
   const blob = await createBlob()
-  const fileName = sanitizeFileName(`report-${report.id}.pdf`)
-  triggerBlobDownload(blob, fileName)
+  const fileName = sanitizeFileName(fileNameOverride || `report-${report.id}.pdf`)
+
+  return {
+    blob,
+    fileName,
+    mimeType: blob.type || 'application/pdf',
+  }
 }
 
 

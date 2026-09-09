@@ -19,8 +19,9 @@ import {
 import { Description, ArrowBack, Save } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
-import { getAuthHeader } from '../utils/authUtils'
-import type { Grade, ReportFormData, Student } from '../types'
+import { getAuthHeader, getUser } from '../utils/authUtils'
+import { buildReportPdfFile } from '../utils/reportPdfExport'
+import type { Grade, Report, ReportCreateRequest, ReportFormData, Student } from '../types'
 
 interface CreateReportPageProps {
   onBack: () => void
@@ -32,6 +33,18 @@ const REPORT_TYPES = [
   { value: 'Observación', label: 'Observación' },
   { value: 'Reporte', label: 'Reporte' },
 ]
+
+const blobToBase64 = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = typeof reader.result === 'string' ? reader.result : ''
+      const commaIndex = result.indexOf(',')
+      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result)
+    }
+    reader.onerror = () => reject(new Error('Unable to read generated PDF'))
+    reader.readAsDataURL(blob)
+  })
 
 export default function CreateReportPage({ onBack, onSuccess }: CreateReportPageProps) {
   const [students, setStudents] = useState<Student[]>([])
@@ -185,10 +198,32 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
     setApiError('')
 
     try {
+      const nowIso = new Date().toISOString()
+      const draftReport: Report = {
+        id: 0,
+        content: formData.content,
+        student: formData.student,
+        grade: formData.grade as Grade,
+        reportType: formData.reportType,
+        authorUsername: getUser()?.username || 'unknown',
+        createdAt: nowIso,
+      }
+
+      const { blob, fileName, mimeType } = await buildReportPdfFile(
+        draftReport,
+        `report-draft-${Date.now()}.pdf`,
+      )
+      const payload: ReportCreateRequest = {
+        ...formData,
+        pdfBase64: await blobToBase64(blob),
+        pdfFileName: fileName,
+        pdfMimeType: mimeType,
+      }
+
       await apiFetch(API_ROUTES.reports.base, {
         method: 'POST',
         headers: getAuthHeader(),
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
 
       setSuccess(true)
@@ -209,9 +244,9 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
 
   return (
     <Container maxWidth="md">
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ py: { xs: 2, sm: 4 } }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: { xs: 3, sm: 4 } }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={onBack}
@@ -219,14 +254,14 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
           >
             Back to Dashboard
           </Button>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
             <Box
               sx={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 48,
-                height: 48,
+                width: { xs: 44, sm: 48 },
+                height: { xs: 44, sm: 48 },
                 borderRadius: '50%',
                 backgroundColor: '#1976d2',
               }}
@@ -234,7 +269,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               <Description sx={{ color: 'white', fontSize: 24 }} />
             </Box>
             <Box>
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
                 Create New Report
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -260,7 +295,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
 
         {/* Form Card */}
         <Card sx={{ boxShadow: 3 }}>
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Box component="form" onSubmit={handleSubmit} noValidate>
 
               {/* Student Name */}
@@ -316,7 +351,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               </Box>
 
               {/* Grade and Report Type Row */}
-              <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+              <Box sx={{ display: 'flex', gap: 3, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <FormControl fullWidth error={!!errors.grade}>
                   <InputLabel id="grade-label">Grade</InputLabel>
                   <Select
@@ -381,12 +416,12 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               </Box>
 
               {/* Submit Button */}
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', flexDirection: { xs: 'column-reverse', sm: 'row' } }}>
                 <Button
                   variant="outlined"
                   onClick={onBack}
                   disabled={loading || success}
-                  sx={{ textTransform: 'none', px: 4 }}
+                  sx={{ textTransform: 'none', px: 4, width: { xs: '100%', sm: 'auto' } }}
                 >
                   Cancel
                 </Button>
@@ -395,7 +430,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                   variant="contained"
                   disabled={loading || success}
                   startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
-                  sx={{ textTransform: 'none', px: 4 }}
+                  sx={{ textTransform: 'none', px: 4, width: { xs: '100%', sm: 'auto' } }}
                 >
                   {loading ? 'Creating...' : 'Create Report'}
                 </Button>

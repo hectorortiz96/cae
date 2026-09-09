@@ -36,6 +36,7 @@ import {
   Group,
   UploadFile,
   DeleteForever,
+  Search,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
@@ -48,9 +49,10 @@ interface DashboardPageProps {
   onCreateReport: () => void
   onViewReport: (reportId: number) => void
   onViewUser: (userId: number) => void
+  onSearchReports: () => void
 }
 
-export default function DashboardPage({ onLogout, onCreateReport, onViewReport, onViewUser }: DashboardPageProps) {
+export default function DashboardPage({ onLogout, onCreateReport, onViewReport, onViewUser, onSearchReports }: DashboardPageProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [reports, setReports] = useState<Report[]>([])
   const [adminUsers, setAdminUsers] = useState<UserInfo[]>([])
@@ -273,17 +275,19 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ py: { xs: 2, sm: 4 } }}>
         {/* Header */}
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
-            mb: 4,
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 1.5,
+            mb: { xs: 3, sm: 4 },
           }}
         >
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.8rem', sm: '2.125rem' } }}>
             Dashboard
           </Typography>
           <Button
@@ -291,7 +295,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
             color="error"
             startIcon={<Logout />}
             onClick={handleLogout}
-            sx={{ textTransform: 'none' }}
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           >
             Logout
           </Button>
@@ -307,21 +311,21 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         {/* User Info Card */}
         {userInfo && (
           <Card sx={{ mb: 4, boxShadow: 3 }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                 <Avatar
                   sx={{
-                    width: 80,
-                    height: 80,
+                    width: { xs: 64, sm: 80 },
+                    height: { xs: 64, sm: 80 },
                     bgcolor: '#1976d2',
-                    fontSize: '2rem',
+                    fontSize: { xs: '1.5rem', sm: '2rem' },
                   }}
                 >
                   {userInfo.fullName?.charAt(0).toUpperCase() || userInfo.username.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                  <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 1 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
                       {userInfo.fullName || userInfo.username}
                     </Typography>
                     <Chip
@@ -330,7 +334,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                       size="small"
                     />
                   </Box>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, color: 'text.secondary' }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1.5, sm: 3 }, color: 'text.secondary' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <Person fontSize="small" />
                       <Typography variant="body2">{userInfo.username}</Typography>
@@ -355,16 +359,18 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         {/* Admin Panel */}
         {isCurrentUserAdmin && (
           <Card sx={{ mb: 4, boxShadow: 3 }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Box
                 sx={{
                   display: 'flex',
-                  alignItems: 'center',
+                  alignItems: { xs: 'flex-start', sm: 'center' },
+                  flexDirection: { xs: 'column', sm: 'row' },
                   justifyContent: 'space-between',
+                  gap: 1.5,
                   mb: 3,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Group color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                     Admin Panel - Users
@@ -375,7 +381,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   variant="outlined"
                   size="small"
                   onClick={fetchDashboardData}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   Refresh
                 </Button>
@@ -394,7 +400,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   startIcon={importingStudents ? <CircularProgress size={16} color="inherit" /> : <UploadFile />}
                   onClick={handleChooseImportFile}
                   disabled={importingStudents || deletingStudents}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   {importingStudents ? 'Importing...' : 'Import Students CSV'}
                 </Button>
@@ -405,7 +411,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   startIcon={deletingStudents ? <CircularProgress size={16} color="inherit" /> : <DeleteForever />}
                   onClick={handleDeleteAllStudents}
                   disabled={importingStudents || deletingStudents}
-                  sx={{ textTransform: 'none' }}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                 >
                   {deletingStudents ? 'Deleting...' : 'Delete All Students'}
                 </Button>
@@ -449,50 +455,81 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   <CircularProgress size={30} />
                 </Box>
               ) : (
-                <TableContainer component={Paper} variant="outlined">
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Username</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Full Name</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Role</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Joined</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} align="center">
-                          Actions
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {adminUsers.map((user) => (
-                        <TableRow key={user.id} sx={{ '&:hover': { bgcolor: '#fafafa' } }}>
-                          <TableCell>{user.username}</TableCell>
-                          <TableCell>{user.fullName}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={user.role}
-                              color={getRoleColor(user.role) as any}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">
-                              {formatDate(user.createdAt)}
+                <>
+                  <Box sx={{ display: { xs: 'grid', sm: 'none' }, gap: 1.5 }}>
+                    {adminUsers.map((user) => (
+                      <Paper key={user.id} variant="outlined" sx={{ p: 1.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                              {user.fullName || user.username}
                             </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Tooltip title="View User Details">
-                              <IconButton size="small" color="primary" onClick={() => onViewUser(user.id)}>
-                                <Visibility />
-                              </IconButton>
-                            </Tooltip>
+                            <Typography variant="body2" color="text.secondary">
+                              @{user.username}
+                            </Typography>
+                          </Box>
+                          <Chip label={user.role} color={getRoleColor(user.role) as any} size="small" />
+                        </Box>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          {user.email}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            Joined {formatDate(user.createdAt)}
+                          </Typography>
+                          <Button size="small" startIcon={<Visibility />} onClick={() => onViewUser(user.id)} sx={{ textTransform: 'none' }}>
+                            View
+                          </Button>
+                        </Box>
+                      </Paper>
+                    ))}
+                  </Box>
+
+                  <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
+                    <Table size="small" sx={{ minWidth: 760 }}>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Username</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Full Name</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Email</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Role</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Joined</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold' }} align="center">
+                            Actions
                           </TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                      </TableHead>
+                      <TableBody>
+                        {adminUsers.map((user) => (
+                          <TableRow key={user.id} sx={{ '&:hover': { bgcolor: '#fafafa' } }}>
+                            <TableCell>{user.username}</TableCell>
+                            <TableCell>{user.fullName}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={user.role}
+                                color={getRoleColor(user.role) as any}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" color="text.secondary">
+                                {formatDate(user.createdAt)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Tooltip title="View User Details">
+                                <IconButton size="small" color="primary" onClick={() => onViewUser(user.id)}>
+                                  <Visibility />
+                                </IconButton>
+                              </Tooltip>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
               )}
             </CardContent>
           </Card>
@@ -500,30 +537,49 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
 
         {/* Reports Section */}
         <Card sx={{ boxShadow: 3 }}>
-          <CardContent sx={{ p: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: 1.5,
                 mb: 3,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Description color="primary" />
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                   My Reports
                 </Typography>
                 <Chip label={reports.length} size="small" color="primary" />
               </Box>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={onCreateReport}
-                sx={{ textTransform: 'none' }}
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 1,
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
-                Create New Report
-              </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Search />}
+                  onClick={onSearchReports}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Search by Student
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={onCreateReport}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Create New Report
+                </Button>
+              </Box>
             </Box>
 
             {reports.length === 0 ? (
@@ -564,66 +620,95 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   </Alert>
                 )}
 
-              <TableContainer component={Paper} variant="outlined">
-                <Table>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Grade</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }} align="center">
-                        Actions
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {reports.map((report) => (
-                      <TableRow
-                        key={report.id}
-                        sx={{ '&:hover': { bgcolor: '#fafafa' } }}
-                      >
-                        <TableCell>{report.student}</TableCell>
-                        <TableCell>
-                          <Chip label={report.grade} size="small" variant="outlined" />
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={report.reportType}
-                            size="small"
-                            color={report.reportType === 'Reporte' ? 'error' : 'warning'}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {formatDate(report.createdAt)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Tooltip title="View Report">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => onViewReport(report.id)}
-                            >
-                              <Visibility />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Copy Public Link">
-                            <IconButton
-                              size="small"
-                              color="secondary"
-                              onClick={() => handleCopyPublicLink(report.id)}
-                            >
-                              <LinkIcon />
-                            </IconButton>
-                          </Tooltip>
+                <Box sx={{ display: { xs: 'grid', sm: 'none' }, gap: 1.5 }}>
+                  {reports.map((report) => (
+                    <Paper key={report.id} variant="outlined" sx={{ p: 1.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {report.student}
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                        <Chip label={report.grade} size="small" variant="outlined" />
+                        <Chip
+                          label={report.reportType}
+                          size="small"
+                          color={report.reportType === 'Reporte' ? 'error' : 'warning'}
+                        />
+                      </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                        Created {formatDate(report.createdAt)}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                        <Button size="small" startIcon={<Visibility />} onClick={() => onViewReport(report.id)} sx={{ textTransform: 'none' }}>
+                          View
+                        </Button>
+                        <Button size="small" color="secondary" startIcon={<LinkIcon />} onClick={() => handleCopyPublicLink(report.id)} sx={{ textTransform: 'none' }}>
+                          Copy Link
+                        </Button>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+
+                <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
+                  <Table sx={{ minWidth: 680 }}>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Student</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Grade</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Type</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }} align="center">
+                          Actions
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                      {reports.map((report) => (
+                        <TableRow
+                          key={report.id}
+                          sx={{ '&:hover': { bgcolor: '#fafafa' } }}
+                        >
+                          <TableCell>{report.student}</TableCell>
+                          <TableCell>
+                            <Chip label={report.grade} size="small" variant="outlined" />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={report.reportType}
+                              size="small"
+                              color={report.reportType === 'Reporte' ? 'error' : 'warning'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDate(report.createdAt)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Tooltip title="View Report">
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => onViewReport(report.id)}
+                              >
+                                <Visibility />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Copy Public Link">
+                              <IconButton
+                                size="small"
+                                color="secondary"
+                                onClick={() => handleCopyPublicLink(report.id)}
+                              >
+                                <LinkIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </>
             )}
           </CardContent>
@@ -635,13 +720,13 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
             <Typography variant="body2" sx={{ mb: 1 }}>
               Use an optional header row:
             </Typography>
-            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, mb: 2 }}>
+            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, mb: 2, overflowX: 'auto' }}>
               fullName,grade,contactemail1,contactemail2
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
               Each data row must have 3 or 4 columns:
             </Typography>
-            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1 }}>
+            <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, overflowX: 'auto' }}>
               fullName,grade,contactemail1[,contactemail2]
             </Typography>
           </DialogContent>
@@ -684,5 +769,4 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
     </Container>
   )
 }
-
 

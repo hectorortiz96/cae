@@ -52,6 +52,12 @@ export interface ReportFormData {
   reportType: string
 }
 
+export interface ReportCreateRequest extends ReportFormData {
+  pdfBase64?: string
+  pdfFileName?: string
+  pdfMimeType?: string
+}
+
 export interface StudentBatchImportRowError {
   row: number
   message: string
