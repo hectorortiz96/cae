@@ -1,0 +1,24 @@
+﻿info:
+  name: Update Report
+  type: http
+  seq: 9
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/reports/{{reportId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "student": "John Doe Updated",
+        "grade": "6",
+        "reportType": "Reporte",
+        "content": "This is an updated test report content.",
+        "pdfBase64": "",
+        "pdfFileName": "",
+        "pdfMimeType": ""
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+

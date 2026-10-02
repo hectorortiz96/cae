@@ -16,9 +16,9 @@ import {
   Logout,
   Link as LinkIcon,
   Description,
+  DescriptionOutlined,
   Person,
   School,
-  Category,
   CalendarToday,
   FileDownload,
 } from '@mui/icons-material'
@@ -230,8 +230,8 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
                 <Chip icon={<School />} label={`Grade ${report.grade}`} variant="outlined" />
-                <Chip icon={<Category />} label={report.reportType} color={report.reportType === 'Reporte' ? 'error' : 'warning'} />
-                <Chip icon={<Person />} label={`Author: ${report.authorUsername}`} />
+                <Chip icon={<DescriptionOutlined />} label={report.reportType} color={report.reportType === 'Reporte' ? 'error' : 'warning'} />
+                <Chip icon={<Person />} label={`Author: ${report.authorFullName}`} />
                 <Chip
                   icon={<CalendarToday />}
                   label={`Created: ${formatDate(report.createdAt)}`}
@@ -269,4 +269,3 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
     </Container>
   )
 }
-

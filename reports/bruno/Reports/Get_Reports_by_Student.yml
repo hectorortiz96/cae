@@ -1,0 +1,12 @@
+﻿info:
+  name: Get Reports by Student
+  type: http
+  seq: 8
+
+http:
+  method: GET
+  url: "{{baseUrl}}/reports/student/John Doe"
+  auth:
+    type: bearer
+    token: "{{token}}"
+

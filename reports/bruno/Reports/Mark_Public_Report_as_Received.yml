@@ -1,0 +1,10 @@
+﻿info:
+  name: Mark Public Report as Received
+  type: http
+  seq: 12
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/reports/public/{{reportId}}/received"
+  auth: none
+

@@ -1,0 +1,11 @@
+﻿name: Local1
+variables:
+  - name: baseUrl
+    value: https://api.cae-reports.com
+    description: ""
+  - name: token
+    value: ""
+    description: ""
+  - name: userId
+    value: "1"
+    description: ""

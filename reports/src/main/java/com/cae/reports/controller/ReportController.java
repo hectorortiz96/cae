@@ -58,6 +58,15 @@ public class ReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // PUT /reports/public/{id}/received - Mark a public report as received
+    @PutMapping("/public/{id:\\d+}/received")
+    public ResponseEntity<ReportResponse> markPublicReportReceived(@PathVariable Integer id) {
+        return reportService.getReportById(id)
+                .map(existing -> reportService.markReportReceived(existing.getId()))
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // GET /reports/me - Get reports created by the current user
     @GetMapping("/me")
     public ResponseEntity<List<ReportResponse>> getMyReports() {

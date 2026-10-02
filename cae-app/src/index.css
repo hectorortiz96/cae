@@ -17,7 +17,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -52,36 +52,42 @@
 
 #root {
   width: 100%;
-  max-width: 1126px;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+  border-inline: none;
+  min-height: 100dvh;
+  display: block;
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  width: 100%;
+  overflow-x: hidden;
+  background: #f5f7fa;
 }
 
 *,
 *::before,
 *::after {
-  box-sizing: inherit;
+  box-sizing: border-box;
 }
 
 @media (max-width: 600px) {
   #root {
     border-inline: none;
   }
+
+  body {
+    font-size: 15px;
+  }
 }
 
 h1,
 h2 {
-  font-family: var(--heading);
+  font-family: var(--heading), sans-serif;
   font-weight: 500;
   color: var(--text-h);
 }
@@ -95,6 +101,7 @@ h1 {
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
@@ -104,13 +111,14 @@ h2 {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
 
 code,
 .counter {
-  font-family: var(--mono);
+  font-family: var(--mono), monospace;
   display: inline-flex;
   border-radius: 4px;
   color: var(--text-h);

@@ -1,0 +1,12 @@
+﻿info:
+  name: Get My Reports
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{baseUrl}}/reports/me"
+  auth:
+    type: bearer
+    token: "{{token}}"
+

@@ -1,81 +1,55 @@
 package com.cae.reports.controller;
 
+import com.cae.reports.dto.request.ForgotPasswordRequest;
 import com.cae.reports.dto.request.LoginRequest;
 import com.cae.reports.dto.request.RegisterRequest;
+import com.cae.reports.dto.request.ResetPasswordRequest;
 import com.cae.reports.dto.response.LoginResponse;
+import com.cae.reports.dto.response.PasswordResetResponse;
 import com.cae.reports.dto.response.UserResponse;
+import com.cae.reports.model.PasswordResetToken;
 import com.cae.reports.model.User;
 import com.cae.reports.service.AuthService;
+import com.cae.reports.service.EmailNotificationService;
 import com.cae.reports.service.JwtService;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/auth")
 @RestController
 public class AuthenticationController {
-    // Generates JWT tokens
-    private final JwtService jwtService;
-    // Handles signup/login logic
-    private final AuthService authService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationController.class);
 
-    public AuthenticationController(JwtService jwtService, AuthService authService) {
+    private final JwtService jwtService;
+    private final AuthService authService;
+    private final EmailNotificationService emailNotificationService;
+
+    public AuthenticationController(
+            JwtService jwtService,
+            AuthService authService,
+            EmailNotificationService emailNotificationService
+    ) {
         this.jwtService = jwtService;
         this.authService = authService;
+        this.emailNotificationService = emailNotificationService;
     }
 
     // POST /auth/signup
-    // Registers a new user and returns the created user details
-    // Example request body:
-    // {
-    //   "username": "john",
-    //   "password": "secret123",
-    //   "email": "john@example.com",
-    //   "fullName": "John Doe"
-    // }
-    // Example response body:
-    // {
-    //   "id": 1,
-    //   "username": "john",
-    //   "email": "john@example.com",
-    //   "fullName": "John Doe",
-    //   "createdAt": "2026-08-27T...",
-    //   "updatedAt": "2026-08-27T..."
-    // }
     @PostMapping("/signup")
-    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest registerUserDto) {
-        User registeredUser = authService.signup(registerUserDto);
-
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerUserDto) {
+        User registeredUser = authService.register(registerUserDto);
         return ResponseEntity.ok(UserResponse.fromUser(registeredUser));
     }
 
-    //POST /auth/login
-    // Authenticates a user and returns a JWT token along with user details
-    // Example request body:
     // POST /auth/login
-    // {
-    //   "username": "john",
-    //   "password": "secret123"
-    // }
-    // Example response body:
-    // {
-    //  "token": "eyJhbGciOiJIUzI1NiIs...",
-    //  "expiresIn": 3600000,
-    //  "user": {
-    //     "id": 1,
-    //     "username": "john",
-    //     "email": "john@example.com",
-    //     "fullName": "John Doe"
-    //   }
-    // }
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginRequest loginUserDto) {
+    public ResponseEntity<LoginResponse> authenticate(@Valid @RequestBody LoginRequest loginUserDto) {
         User authenticatedUser = authService.authenticate(loginUserDto);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
-
         LoginResponse loginResponse = new LoginResponse(
                 jwtToken,
                 jwtService.getExpirationTime(),
@@ -83,5 +57,52 @@ public class AuthenticationController {
         );
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    // POST /auth/forgot-password
+    @PostMapping("/forgot-password")
+    public ResponseEntity<PasswordResetResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        try {
+            PasswordResetToken resetToken = authService.createPasswordResetToken(request.getEmail());
+            
+            // Send email with reset link
+            String resetLink = "http://localhost:5173/reset-password?token=" + resetToken.getToken();
+            emailNotificationService.sendPasswordResetEmail(request.getEmail(), resetLink);
+            
+            LOGGER.info("Password reset token created for email: {}", request.getEmail());
+            return ResponseEntity.ok(new PasswordResetResponse(
+                    "Password reset email sent successfully",
+                    true
+            ));
+        } catch (IllegalArgumentException e) {
+            LOGGER.warn("Forgot password request for non-existent email: {}", request.getEmail());
+            return ResponseEntity.ok(new PasswordResetResponse(
+                    "If an account exists with this email, a reset link has been sent",
+                    true
+            ));
+        }
+    }
+
+    // POST /auth/reset-password
+    @PostMapping("/reset-password")
+    public ResponseEntity<PasswordResetResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request
+    ) {
+        try {
+            authService.resetPassword(request);
+            LOGGER.info("Password reset successfully");
+            return ResponseEntity.ok(new PasswordResetResponse(
+                    "Password reset successfully",
+                    true
+            ));
+        } catch (IllegalArgumentException e) {
+            LOGGER.warn("Password reset failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(new PasswordResetResponse(
+                    e.getMessage(),
+                    false
+            ));
+        }
     }
 }

@@ -9,7 +9,6 @@ import {
   Chip,
   CircularProgress,
   Container,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -17,7 +16,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material'
 import {
@@ -27,7 +25,6 @@ import {
   Email,
   Logout,
   Person,
-  Visibility,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
@@ -107,6 +104,13 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
     }
   }
 
+  const tableTextCellSx = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: 0,
+  } as const
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -157,11 +161,11 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
               </Typography>
               <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                 <Avatar sx={{ width: { xs: 60, sm: 72 }, height: { xs: 60, sm: 72 }, bgcolor: '#1976d2', fontSize: { xs: '1.4rem', sm: '1.8rem' } }}>
-                  {userInfo.fullName?.charAt(0).toUpperCase() || userInfo.username.charAt(0).toUpperCase()}
+                  {userInfo.fullName?.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 1 }}>
-                    <Typography variant="h6">{userInfo.fullName || userInfo.username}</Typography>
+                    <Typography variant="h6">{userInfo.fullName}</Typography>
                     <Chip label={userInfo.role} size="small" color={getRoleColor(userInfo.role) as any} />
                   </Box>
                   <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 3 }, flexWrap: 'wrap' }}>
@@ -198,9 +202,20 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
               <Alert severity="info">This user has not created any reports yet.</Alert>
             ) : (
               <>
-                <Box sx={{ display: { xs: 'grid', sm: 'none' }, gap: 1.5 }}>
+                <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
                   {reports.map((report) => (
-                    <Paper key={report.id} variant="outlined" sx={{ p: 1.5 }}>
+                    <Paper
+                      key={report.id}
+                      variant="outlined"
+                      sx={{
+                        width: '100%',
+                        p: 1.5,
+                        cursor: 'pointer',
+                        transition: 'box-shadow 0.2s ease',
+                        '&:hover': { boxShadow: 2 },
+                        '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+                      }}
+                    >
                       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {report.student}
                       </Typography>
@@ -216,9 +231,6 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                         <Typography variant="caption" color="text.secondary">
                           Created {formatDate(report.createdAt)}
                         </Typography>
-                        <Button size="small" startIcon={<Visibility />} onClick={() => onViewReport(report.id)} sx={{ textTransform: 'none' }}>
-                          View
-                        </Button>
                       </Box>
                     </Paper>
                   ))}
@@ -232,15 +244,34 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                         <TableCell sx={{ fontWeight: 'bold' }}>Grade</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }} align="center">
-                          Actions
-                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {reports.map((report) => (
-                        <TableRow key={report.id} sx={{ '&:hover': { bgcolor: '#fafafa' } }}>
-                          <TableCell>{report.student}</TableCell>
+                        <TableRow
+                          key={report.id}
+                          onClick={() => onViewReport(report.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              onViewReport(report.id)
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          sx={{
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: '#fafafa' },
+                            '&:focus-visible': {
+                              outline: '2px solid',
+                              outlineColor: 'primary.main',
+                              outlineOffset: '-2px',
+                            },
+                          }}
+                        >
+                          <TableCell sx={tableTextCellSx}>
+                            {report.student}
+                          </TableCell>
                           <TableCell>
                             <Chip label={report.grade} size="small" variant="outlined" />
                           </TableCell>
@@ -256,13 +287,6 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                               {formatDate(report.createdAt)}
                             </Typography>
                           </TableCell>
-                          <TableCell align="center">
-                            <Tooltip title="View Report">
-                              <IconButton size="small" color="primary" onClick={() => onViewReport(report.id)}>
-                                <Visibility />
-                              </IconButton>
-                            </Tooltip>
-                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -276,4 +300,3 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
     </Container>
   )
 }
-

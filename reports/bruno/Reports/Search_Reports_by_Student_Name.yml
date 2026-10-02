@@ -1,0 +1,12 @@
+﻿info:
+  name: Search Reports by Student Name
+  type: http
+  seq: 5
+
+http:
+  method: GET
+  url: "{{baseUrl}}/reports/search?studentName=John"
+  auth:
+    type: bearer
+    token: "{{token}}"
+

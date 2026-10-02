@@ -26,7 +26,9 @@ export interface Report {
   grade: Grade
   reportType: string
   authorUsername: string
+  authorFullName: string
   createdAt: string
+  received: boolean
 }
 
 export type ReportPdfFieldKey =
@@ -37,6 +39,7 @@ export type ReportPdfFieldKey =
   | 'authorUsername'
   | 'createdAt'
   | 'content'
+  | 'received'
 
 export interface ReportPdfExportOptions {
   includeFields?: ReportPdfFieldKey[]

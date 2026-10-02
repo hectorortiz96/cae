@@ -41,11 +41,14 @@ public class Report {
     @Column(name = "updated_at")
     private Date updatedAt;
 
+    @Column(name = "received", nullable = false)
+    private boolean received = false;
+
 
     public Report() {
     }
 
-    public Report(Integer id, String content, String student, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt) {
+    public Report(Integer id, String content, String student, Grade grade, ReportType reportType, User user, Date createdAt, Date updatedAt, boolean received) {
         this.id = id;
         this.content = content;
         this.student = student;
@@ -54,6 +57,7 @@ public class Report {
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.received = received;
     }
 
     public Integer getId() {
@@ -120,5 +124,12 @@ public class Report {
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
-}
 
+    public boolean isReceived() {
+        return received;
+    }
+
+    public void setReceived(boolean received) {
+        this.received = received;
+    }
+}
