@@ -1,0 +1,16 @@
+﻿info:
+  name: Import Students from CSV
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/students/import"
+  body:
+    type: form-data
+    data:
+      file: "@/path/to/students.csv"
+  auth:
+    type: bearer
+    token: "{{token}}"
+

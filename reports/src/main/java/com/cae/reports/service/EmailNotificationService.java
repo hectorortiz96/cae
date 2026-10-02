@@ -149,6 +149,38 @@ public class EmailNotificationService {
         return reportType + "_" + report.getStudent() + "_" + reportDate + ".pdf";
     }
 
+    public void sendPasswordResetEmail(String email, String resetLink) {
+        if (!mailEnabled) {
+            LOGGER.info("Skipping password-reset email because app.mail.enabled=false");
+            return;
+        }
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, StandardCharsets.UTF_8.name());
+
+            helper.setFrom(fromAddress);
+            helper.setTo(email);
+            helper.setSubject("Password Reset Request");
+            helper.setText(buildPasswordResetBody(resetLink));
+
+            mailSender.send(message);
+            LOGGER.info("Sent password-reset email to: {}", email);
+        } catch (MessagingException ex) {
+            throw new IllegalStateException("Failed to send password reset email", ex);
+        }
+    }
+
+    private String buildPasswordResetBody(String resetLink) {
+        return "Hello,\n\n"
+                + "You requested to reset your password. Click the link below to proceed:\n\n"
+                + resetLink + "\n\n"
+                + "This link will expire in 24 hours.\n\n"
+                + "If you did not request this, please ignore this email.\n\n"
+                + "Best regards,\n"
+                + "The CAE Team";
+    }
+
     private String resolveMimeType(String mimeType) {
         String trimmed = mimeType == null ? "" : mimeType.trim();
         if (trimmed.isEmpty()) {

@@ -1,0 +1,19 @@
+﻿info:
+  name: Register
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/signup"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "testuser",
+        "password": "Test@1234",
+        "email": "testuser@example.com",
+        "fullName": "Test User"
+      }
+  auth: none
+

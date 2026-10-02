@@ -1,5 +1,6 @@
 package com.cae.reports.service;
 
+import com.cae.reports.dto.response.ReportResponse;
 import com.cae.reports.dto.request.ReportRequest;
 import com.cae.reports.model.Grade;
 import com.cae.reports.model.Report;
@@ -9,6 +10,7 @@ import com.cae.reports.repository.ReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Base64;
 import java.util.List;
@@ -95,6 +97,19 @@ public class ReportService {
         report.setReportType(ReportType.fromValue(request.getReportType()));
 
         return reportRepository.save(report);
+    }
+
+    @Transactional
+    public ReportResponse markReportReceived(Integer id) {
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        if (!report.isReceived()) {
+            report.setReceived(true);
+            report = reportRepository.save(report);
+        }
+
+        return ReportResponse.fromReport(report);
     }
 
     public void deleteReport(Integer id, User user) {

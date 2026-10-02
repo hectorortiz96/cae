@@ -1,0 +1,24 @@
+﻿info:
+  name: Create Report
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/reports"
+  body:
+    type: json
+    data: |-
+      {
+        "student": "John Doe",
+        "grade": "5",
+        "reportType": "Reporte",
+        "content": "This is a test report content for the student.",
+        "pdfBase64": "",
+        "pdfFileName": "",
+        "pdfMimeType": ""
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+

@@ -10,13 +10,15 @@ import {
   Alert,
   CircularProgress,
   Divider,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material'
 import {
   ArrowBack,
   Description,
+  DescriptionOutlined,
   Person,
   School,
-  Category,
   CalendarToday,
   FileDownload,
 } from '@mui/icons-material'
@@ -36,6 +38,9 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
   const [error, setError] = useState('')
   const [exportError, setExportError] = useState('')
   const [exportingPdf, setExportingPdf] = useState(false)
+  const [receivedChecked, setReceivedChecked] = useState(false)
+  const [confirmingReceived, setConfirmingReceived] = useState(false)
+  const [receivedError, setReceivedError] = useState('')
 
   useEffect(() => {
     fetchReportDetail()
@@ -44,10 +49,12 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
   const fetchReportDetail = async () => {
     setLoading(true)
     setError('')
+    setReceivedError('')
 
     try {
       const reportData = await apiFetch<Report>(API_ROUTES.reports.publicById(reportId))
       setReport(reportData)
+      setReceivedChecked(reportData.received)
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
@@ -60,6 +67,31 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleConfirmReceived = async () => {
+    if (!report || report.received || !receivedChecked) {
+      return
+    }
+
+    setReceivedError('')
+    setConfirmingReceived(true)
+
+    try {
+      const updatedReport = await apiFetch<Report>(API_ROUTES.reports.publicMarkReceived(report.id), {
+        method: 'PUT',
+      })
+      setReport(updatedReport)
+      setReceivedChecked(updatedReport.received)
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setReceivedError(err.message)
+      } else {
+        setReceivedError('Failed to confirm report receipt. Please try again.')
+      }
+    } finally {
+      setConfirmingReceived(false)
     }
   }
 
@@ -136,6 +168,12 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
           </Alert>
         )}
 
+        {!error && receivedError && (
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            {receivedError}
+          </Alert>
+        )}
+
         {!error && report && (
           <Card sx={{ boxShadow: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
@@ -149,17 +187,45 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
                 <Chip icon={<School />} label={`Grade ${report.grade}`} variant="outlined" />
                 <Chip
-                  icon={<Category />}
+                  icon={<DescriptionOutlined />}
                   label={report.reportType}
                   color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                 />
-                <Chip icon={<Person />} label={`Author: ${report.authorUsername}`} />
+                <Chip icon={<Person />} label={`Author: ${report.authorFullName}`} />
                 <Chip
                   icon={<CalendarToday />}
                   label={`Created: ${formatDate(report.createdAt)}`}
                   variant="outlined"
                 />
+                <Chip
+                  label={report.received ? 'Acknowledged as received' : 'Pending acknowledgment'}
+                  color={report.received ? 'success' : 'default'}
+                  variant={report.received ? 'filled' : 'outlined'}
+                />
               </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={receivedChecked}
+                    onChange={(event) => setReceivedChecked(event.target.checked)}
+                    disabled={report.received || confirmingReceived}
+                  />
+                }
+                label="I acknowledge that this report was received"
+                sx={{ mb: 1 }}
+              />
+
+              <Button
+                variant="contained"
+                onClick={handleConfirmReceived}
+                disabled={report.received || !receivedChecked || confirmingReceived}
+                sx={{ textTransform: 'none', mb: 3, width: { xs: '100%', sm: 'auto' } }}
+              >
+                {report.received ? 'Receipt Confirmed' : confirmingReceived ? 'Confirming...' : 'Confirm Receipt'}
+              </Button>
 
               <Divider sx={{ mb: 3 }} />
 
@@ -202,4 +268,3 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
     </Container>
   )
 }
-

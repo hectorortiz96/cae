@@ -1,0 +1,12 @@
+﻿info:
+  name: Get Reports by Grade
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{baseUrl}}/reports/grade/5"
+  auth:
+    type: bearer
+    token: "{{token}}"
+

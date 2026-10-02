@@ -206,7 +206,9 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         grade: formData.grade as Grade,
         reportType: formData.reportType,
         authorUsername: getUser()?.username || 'unknown',
+        authorFullName: getUser()?.fullName || 'unknown',
         createdAt: nowIso,
+        received: false,
       }
 
       const { blob, fileName, mimeType } = await buildReportPdfFile(

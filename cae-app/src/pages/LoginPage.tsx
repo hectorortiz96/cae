@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Container,
   Box,
@@ -11,6 +12,7 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
+  Link,
 } from '@mui/material'
 import { Lock, Person, Visibility, VisibilityOff } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
@@ -22,6 +24,7 @@ interface LoginFormData {
 }
 
 export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSwitchToRegister?: () => void; onLoginSuccess?: () => void }) {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<LoginFormData>({
     username: '',
     password: '',
@@ -206,9 +209,24 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                     },
                   }}
                 />
-              </Box>
+               </Box>
 
-              <Button
+               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+                 <Link
+                   component="button"
+                   type="button"
+                   variant="body2"
+                   onClick={(e) => {
+                     e.preventDefault()
+                     navigate('/forgot-password')
+                   }}
+                   sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                 >
+                   Forgot password?
+                 </Link>
+               </Box>
+
+               <Button
                 fullWidth
                 type="submit"
                 variant="contained"

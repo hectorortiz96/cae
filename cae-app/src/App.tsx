@@ -6,10 +6,13 @@ import { AnonymousOnly, RequireAuth } from './routes/AuthGuards'
 
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const CreateReportPage = lazy(() => import('./pages/CreateReportPage'))
 const ReportDetailPage = lazy(() => import('./pages/ReportDetailPage'))
 const ReportSearchPage = lazy(() => import('./pages/ReportSearchPage'))
+const UnreceivedReportsPage = lazy(() => import('./pages/UnreceivedReportsPage'))
 const AdminUserDetailPage = lazy(() => import('./pages/AdminUserDetailPage'))
 const PublicReportDetailPage = lazy(() => import('./pages/PublicReportDetailPage'))
 
@@ -58,6 +61,7 @@ const DashboardRoute = () => {
       onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
       onViewUser={(userId) => navigate(`/admin/users/${userId}`)}
       onSearchReports={() => navigate('/reports/search')}
+      onViewUnreceivedReports={() => navigate('/reports/unreceived')}
     />
   )
 }
@@ -96,6 +100,18 @@ const ReportSearchRoute = () => {
 
   return (
     <ReportSearchPage
+      onBack={() => navigate('/dashboard')}
+      onLogout={() => navigate('/login', { replace: true })}
+      onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
+    />
+  )
+}
+
+const UnreceivedReportsRoute = () => {
+  const navigate = useNavigate()
+
+  return (
+    <UnreceivedReportsPage
       onBack={() => navigate('/dashboard')}
       onLogout={() => navigate('/login', { replace: true })}
       onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
@@ -156,14 +172,30 @@ function App() {
               </AnonymousOnly>
             }
           />
-          <Route
-            path="/register"
-            element={
-              <AnonymousOnly>
-                <RegisterRoute />
-              </AnonymousOnly>
-            }
-          />
+           <Route
+             path="/register"
+             element={
+               <AnonymousOnly>
+                 <RegisterRoute />
+               </AnonymousOnly>
+             }
+           />
+           <Route
+             path="/forgot-password"
+             element={
+               <AnonymousOnly>
+                 <ForgotPasswordPage />
+               </AnonymousOnly>
+             }
+           />
+           <Route
+             path="/reset-password"
+             element={
+               <AnonymousOnly>
+                 <ResetPasswordPage />
+               </AnonymousOnly>
+             }
+           />
           <Route
             path="/dashboard"
             element={
@@ -193,6 +225,14 @@ function App() {
             element={
               <RequireAuth>
                 <ReportSearchRoute />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/reports/unreceived"
+            element={
+              <RequireAuth>
+                <UnreceivedReportsRoute />
               </RequireAuth>
             }
           />

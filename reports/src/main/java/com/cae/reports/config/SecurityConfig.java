@@ -68,6 +68,9 @@ public class SecurityConfig {
                         // Public read-only endpoint for sharing a single report
                         .requestMatchers(HttpMethod.GET, "/reports/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/public/**").permitAll()
+                        // Public acknowledgment endpoint for marking report as received
+                        .requestMatchers(HttpMethod.PUT, "/reports/public/*/received").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/reports/public/*/received").permitAll()
                         // Everything else requires auth
                         .anyRequest().authenticated()
                 )

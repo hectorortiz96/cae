@@ -1,0 +1,8 @@
+{
+  "variables": {
+    "baseUrl": "https://api.cae-reports.com",
+    "token": "",
+    "userId": "1"
+  }
+}
+

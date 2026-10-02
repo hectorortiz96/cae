@@ -11,19 +11,23 @@ public class ReportResponse {
     private String grade;
     private String reportType;
     private String authorUsername;
+    private String authorFullName;
     private Date createdAt;
+    private boolean received;
 
     public ReportResponse() {
     }
 
-    public ReportResponse(Integer id, String content, String student, String grade, String reportType, String authorUsername, Date createdAt) {
+    public ReportResponse(Integer id, String content, String student, String grade, String reportType, String authorUsername, String authorFullName, Date createdAt, boolean received) {
         this.id = id;
         this.content = content;
         this.student = student;
         this.grade = grade;
         this.reportType = reportType;
         this.authorUsername = authorUsername;
+        this.authorFullName = authorFullName;
         this.createdAt = createdAt;
+        this.received = received;
     }
 
     // Factory method to convert Report entity to ReportResponse DTO
@@ -35,7 +39,9 @@ public class ReportResponse {
                 report.getGrade().getValue(),
                 report.getReportType().getValue(),
                 report.getUser().getUsername(),
-                report.getCreatedAt()
+                report.getUser().getFullName(),
+                report.getCreatedAt(),
+                report.isReceived()
         );
     }
 
@@ -88,6 +94,14 @@ public class ReportResponse {
         this.authorUsername = authorUsername;
     }
 
+    public String getAuthorFullName() {
+        return authorFullName;
+    }
+
+    public void setAuthorFullName(String authorFullName) {
+        this.authorFullName = authorFullName;
+    }
+
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -95,5 +109,12 @@ public class ReportResponse {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-}
 
+    public boolean isReceived() {
+        return received;
+    }
+
+    public void setReceived(boolean received) {
+        this.received = received;
+    }
+}

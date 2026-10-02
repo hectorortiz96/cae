@@ -58,6 +58,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#111827',
   },
+  warningSmall: {
+    textTransform: 'uppercase',
+    fontWeight: "bold",
+    color: '#111827',
+  },
   text: {
     margin: 10,
   },
@@ -123,42 +128,6 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
   URL.revokeObjectURL(url)
 }
 
-function getMessageByReportType(reportType: string) {
-  if (reportType === 'Observación') {
-    return (
-        <>
-          <Text style={styles.warning}>
-          3 OBSERVACIONES ACUMULADAS POR CUALQUIER CAUSA SE CONVIERTEN EN 1 REPORTE DISCIPLINARIO.
-          </Text>
-          <Text style={styles.text}>
-          Se aplicarian las Medidas Disciplinarias del Articulo 36 del Reglamento de Disciplina Escolar de la SEP.
-          </Text>
-          <Text style={styles.disclaimer}>
-            AGRADECEMOS SU APOYO QUE FAVORECERÁ LA RESPONSABILIDAD
-            Y SANA CONVIVENCIA DE NUESTROS ALUMNOS. DIALOGUEN EN FAMILIA.
-          </Text></>
-    )
-  }
-  else if (reportType === 'Reporte') {
-    return (
-        <><Text style={styles.warning}>
-          3 REPORTES ACUMULADOS:
-          </Text>
-          <Text style={styles.text}>
-          Aplica asignación de actividades académicas adicionales bajo supervisión fuera del grupo,
-          en horario escolar o extraescolar, de 1 a 10 días, según lo establecido en las Medidas Disciplinarias
-          del Artículo 36 del Reglamento de Disciplina Escolar de la SEP,
-          se aplica dependiendo de la gravedad de la acción.
-          </Text>
-          <Text style={styles.disclaimer}>
-            AGRADECEMOS SU APOYO Y EL QUE NOS PERMITAN SER PARTÍCIPES EN LA
-            FORMACIÓN DE SU HIJO(A). DIALOGUEN EN FAMILIA.
-          </Text>
-        </>
-    )
-  }
-}
-
 function ReportPdfDocument({
   reportType,
   student,
@@ -176,45 +145,113 @@ function ReportPdfDocument({
 }) {
   const generatedAt = formatDate(new Date().toISOString())
 
-  return (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.contentFrame}>
-          <Image src={logoImage} style={styles.logo} />
-          <Text style={styles.title}>Colegio Anglo Español</Text>
-          <Text style={styles.title}>Secundaria</Text>
-          <Text style={styles.title}>{reportType}</Text>
+  if (reportType === 'Observación') {
+    return (
+        <Document>
+          <Page size="A4" style={styles.page}>
+            <View style={styles.contentFrame}>
+              <Image src={logoImage} style={styles.logo} />
+              <Text style={styles.title}>Colegio Anglo Español</Text>
+              <Text style={styles.title}>Secundaria</Text>
+              <Text style={styles.title}>OBSERVACIÓN DISCIPLINARIA</Text>
 
-          <Text style={styles.text}>Fecha de reporte: {createdAt}</Text>
+              <Text style={styles.text}>Fecha de reporte: {createdAt}</Text>
 
-          <Text style={styles.text}>
-            Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text> en grado{' '}
-            <Text style={styles.fieldValue}>{grade}</Text> muestra una actitud inapropiada en ciertas normas de
-            convivencia descrito a continuacion:
-          </Text>
+              <Text style={styles.text}>
+                Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text> en grado{' '}
+                <Text style={styles.fieldValue}>{grade}</Text> Muestra una actitud inapropiada en ciertas Normas de
+                Convivencia y/o incumplimiento en su desempeño académico descrito a continuación:
+              </Text>
 
-          <Text style={styles.contentBox}>{content}</Text>
+              <Text style={styles.contentBox}>{content}</Text>
 
-          <Text style={styles.text}>
-            Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
-            del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
-          </Text>
-          <Text style={styles.reportTypeNotice}>
-            La conducta tiene un valor del 10% en la calificacion de cada materia.
-          </Text>
+              <Text style={styles.text}>
+                Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
+                del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
+              </Text>
+              <Text style={styles.reportTypeNotice}>
+                La conducta tiene un valor del 10% en la calificacion de cada materia.
+              </Text>
 
-          {getMessageByReportType(reportType)}
+              <Text style={styles.warning}>
+                3 OBSERVACIONES ACUMULADAS POR CUALQUIER CAUSA SE CONVIERTEN EN 1 REPORTE DISCIPLINARIO.
+              </Text>
+              <Text style={styles.text}>
+                Se aplicarian las Medidas Disciplinarias del Articulo 36 del Reglamento de Disciplina Escolar de la SEP.
+              </Text>
+              <Text style={styles.disclaimer}>
+                AGRADECEMOS SU APOYO QUE FAVORECERÁ LA RESPONSABILIDAD
+                Y SANA CONVIVENCIA DE NUESTROS ALUMNOS. DIALOGUEN EN FAMILIA.
+              </Text>
 
-          <Text style={styles.text}>
-            Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
-          </Text>
+              <Text style={styles.text}>
+                Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
+              </Text>
 
-          <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
+              <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
 
-        </View>
-      </Page>
-    </Document>
-  )
+            </View>
+          </Page>
+        </Document>
+    )
+  }
+  else if (reportType === 'Reporte') {
+    return (
+        <Document>
+          <Page size="A4" style={styles.page}>
+            <View style={styles.contentFrame}>
+              <Image src={logoImage} style={styles.logo} />
+              <Text style={styles.title}>Colegio Anglo Español</Text>
+              <Text style={styles.title}>Secundaria</Text>
+              <Text style={styles.title}>REPORTE DISCIPLINARIO</Text>
+
+              <Text style={styles.text}>Fecha de reporte: {createdAt}</Text>
+
+              <Text style={styles.text}>
+                Por este medio se les notifica que su hijo(a) <Text style={styles.fieldValue}>{student}</Text> en grado{' '}
+                <Text style={styles.fieldValue}>{grade}</Text> ha incurrido en la siguiente falta a las Normas de Convivencia:
+              </Text>
+
+              <Text style={styles.contentBox}>{content}</Text>
+
+              <Text style={styles.text}>
+                Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
+                del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
+              </Text>
+              <Text style={styles.reportTypeNotice}>
+                La conducta tiene un valor del 10% en la calificacion de cada materia.
+              </Text>
+
+              <Text style={styles.text}>
+                <Text style={styles.warningSmall}>3 REPORTES ACUMULADOS:</Text> Aplica asignación de actividades
+                académicas adicionales bajo supervisión fuera del grupo, en horario escolar o extraescolar, de 1 a 10 días,
+                según lo establecido en las Medidas Disciplinarias del Artículo 36 del Reglamento de Disciplina Escolar de la SEP,
+                se aplica dependiendo de la gravedad de la acción.
+              </Text>
+              <Text style={styles.disclaimer}>
+                AGRADECEMOS SU APOYO Y EL QUE NOS PERMITAN SER PARTÍCIPES EN LA
+                FORMACIÓN DE SU HIJO(A). DIALOGUEN EN FAMILIA.
+              </Text>
+
+              <Text style={styles.text}>
+                Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
+              </Text>
+
+              <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
+
+            </View>
+          </Page>
+        </Document>
+    )
+  }
+  else return (
+      <Document>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.contentFrame}>
+          </View>
+        </Page>
+      </Document>
+    )
 }
 
 export async function exportReportToPdf(report: Report, _options: ReportPdfExportOptions = {}) {
@@ -223,7 +260,7 @@ export async function exportReportToPdf(report: Report, _options: ReportPdfExpor
 }
 
 export async function buildReportPdfFile(report: Report, fileNameOverride?: string): Promise<ReportPdfFile> {
-  const currentUserFullName = getUser()?.fullName?.trim() || report.authorUsername
+  const currentUserFullName = getUser()?.fullName?.trim() || report.authorFullName || 'unknown'
 
   const pdfInstance = pdf()
   pdfInstance.updateContainer(

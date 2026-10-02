@@ -1,6 +1,7 @@
 package com.cae.reports.service;
 
 import com.cae.reports.dto.request.ReportRequest;
+import com.cae.reports.dto.response.ReportResponse;
 import com.cae.reports.model.Grade;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.ReportType;
@@ -10,8 +11,10 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -84,6 +87,35 @@ class ReportServiceTests {
         assertEquals(101, result.getId());
         verify(reportRepository).save(any(Report.class));
         verify(emailNotificationService).notifyReportCreated(savedReport, null, null, null);
+    }
+
+    @Test
+    void markReportReceivedSetsFlagAndReturnsResponse() {
+        ReportRepository reportRepository = mock(ReportRepository.class);
+        EmailNotificationService emailNotificationService = mock(EmailNotificationService.class);
+        ReportService reportService = new ReportService(reportRepository, emailNotificationService);
+
+        User user = new User();
+        user.setId(1);
+        user.setUsername("teacher1");
+
+        Report existingReport = new Report();
+        existingReport.setId(5);
+        existingReport.setStudent("Jane Doe");
+        existingReport.setGrade(Grade.GRADE_2A);
+        existingReport.setReportType(ReportType.REPORT);
+        existingReport.setUser(user);
+        existingReport.setReceived(false);
+
+        when(reportRepository.findById(5)).thenReturn(Optional.of(existingReport));
+        when(reportRepository.save(existingReport)).thenReturn(existingReport);
+
+        ReportResponse response = reportService.markReportReceived(5);
+
+        assertEquals(5, response.getId());
+        assertEquals("teacher1", response.getAuthorUsername());
+        assertTrue(response.isReceived());
+        verify(reportRepository).save(existingReport);
     }
 }
 

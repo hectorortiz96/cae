@@ -1,0 +1,13 @@
+opencollection: 1.0.0
+
+info:
+  name: CAE Reports API
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git
+      - .mvn
+      - src
+      - target
