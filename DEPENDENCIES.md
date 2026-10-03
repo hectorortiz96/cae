@@ -65,7 +65,7 @@ For local development testing with Docker Compose, use the `.env.local` file:
 
 ```bash
 # Run with local development environment
-docker compose --env-file .env.local up --build
+docker compose --env-file .env.production up --build --pull always
 ```
 
 Or on older versions of docker-compose:
