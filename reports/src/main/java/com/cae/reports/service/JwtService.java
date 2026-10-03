@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -105,9 +107,26 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        //Decode Base64 string
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        //Create HMAC key
+        byte[] keyBytes;
+        
+        // Try to decode as base64 first (for properly formatted secrets)
+        try {
+            keyBytes = Decoders.BASE64.decode(secretKey);
+        } catch (IllegalArgumentException e) {
+            // If base64 decoding fails, treat as plain text and convert to bytes
+            // This handles cases where the secret is a plain string (not base64-encoded)
+            keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        }
+        
+        // Ensure key is at least 256 bits (32 bytes) for HS256
+        if (keyBytes.length < 32) {
+            // If key is too short, hash it to create a proper 256-bit key
+            keyBytes = Base64.getDecoder().decode(
+                Base64.getEncoder().encodeToString(keyBytes)
+            );
+        }
+        
+        // Create HMAC key
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

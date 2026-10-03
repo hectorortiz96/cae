@@ -5,6 +5,9 @@
 #   Production:  docker compose up --build
 #   Local Dev:   docker compose --env-file .env.local up --build
 #
+# NOTE: Always specify .env.local for local development to avoid JWT secret key errors
+# The default .env.production uses placeholder secrets that must be changed
+#
 # Services:
 #   - mysql: Database server
 #   - mailhog: Email capture and testing service

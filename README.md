@@ -29,8 +29,16 @@ This project supports running the full stack locally with Docker Compose.
 
 ### Start the stack
 
+**For local development (REQUIRED - uses .env.local):**
+
 ```powershell
 cd "C:\Users\M8T5SPV\OneDrive - Deere & Co\Desktop\cae"
+docker compose --env-file .env.local up --build
+```
+
+**For production (uses .env.production):**
+
+```powershell
 docker compose up --build
 ```
 
@@ -65,6 +73,18 @@ docker compose down -v
 ```
 
 ## Docker troubleshooting
+
+### "Illegal base64 character: '-'" error during login
+
+**Cause:** You're not using the correct environment file for local development.
+
+**Solution:** Always use `.env.local` for local Docker testing:
+
+```powershell
+docker compose --env-file .env.local up --build
+```
+
+The `.env.production` file is a template and contains placeholder secrets. Use `.env.local` which has properly configured base64-encoded JWT secrets for local development.
 
 ### Docker is not installed or not running
 
