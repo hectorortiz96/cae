@@ -1,0 +1,99 @@
+# CAE Reports - Docker Compose Configuration
+# This file defines all services needed for the CAE application stack
+# 
+# USAGE:
+#   Production:  docker compose up --build
+#   Local Dev:   docker compose --env-file .env.local up --build
+#
+# Services:
+#   - mysql: Database server
+#   - mailhog: Email capture and testing service
+#   - backend: Spring Boot REST API server
+#   - frontend: React + Vite web application
+
+services:
+  # MySQL Database Service
+  # Stores all application data (users, reports, students)
+  mysql:
+    image: mysql:8.4
+    container_name: cae-mysql
+    restart: unless-stopped
+    # Load environment variables from .env.production or .env.local
+    env_file:
+      - ./.env.production
+    # Set MySQL configuration from environment variables
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}      # Database name (cae)
+      MYSQL_USER: ${MYSQL_USER}              # Application user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}      # Application user password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}  # Root user password
+    # Port mapping: internal:external (localhost:3306 for external access)
+    ports:
+      - "3306:3306"
+    # Persistent volume for database data (survives container restarts)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Health check to ensure MySQL is ready before other services start
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s      # Check every 10 seconds
+      timeout: 5s        # Wait 5 seconds for response
+      retries: 10        # Try 10 times before failing
+
+  # Mailhog Service
+  # Email catch-all for development and testing
+  # Captures all outgoing emails and displays them in a web UI
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: cae-mailhog
+    restart: unless-stopped
+    # Port mapping for SMTP (1025) and Web UI (8025)
+    ports:
+      - "1025:1025"   # SMTP port (used by backend to send emails)
+      - "8025:8025"   # Web UI port (access at http://localhost:8025)
+
+  # Spring Boot Backend Service
+  # REST API server for reports, users, and authentication
+  backend:
+    # Build the backend from the reports/Dockerfile
+    build:
+      context: ./reports
+      dockerfile: Dockerfile
+    container_name: cae-backend
+    restart: unless-stopped
+    # Load environment variables from .env.production or .env.local
+    env_file:
+      - ./.env.production
+    # Ensure MySQL is healthy before starting backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # Port mapping: localhost:8080/api for external access
+    ports:
+      - "8080:8080"
+
+  # React Frontend Service
+  # Web UI served by Nginx on port 5173
+  frontend:
+    # Build the frontend from the cae-app/Dockerfile
+    build:
+      context: ./cae-app
+      dockerfile: Dockerfile
+      # Pass the API base URL to the frontend build
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: cae-frontend
+    restart: unless-stopped
+    # Frontend depends on backend being available
+    depends_on:
+      - backend
+    # Port mapping: localhost:5173 (external), port 80 (internal Nginx)
+    ports:
+      - "5173:80"
+
+# Volumes
+# Persistent storage that survives container restarts and removals
+volumes:
+  # mysql_data: Stores all MySQL database files
+  # Remove with: docker compose down -v
+  mysql_data:
