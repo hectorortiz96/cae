@@ -22,11 +22,19 @@ interface StoredUser {
 }
 
 /**
- * Check if user is authenticated (token exists)
+ * Check if the stored JWT has not expired
  */
 export const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem('token')
-  return !!token
+  const token = getToken()
+  if (!token) return false
+
+  const expiration = getTokenExpiration()
+  if (expiration === null || Date.now() >= expiration) {
+    logout()
+    return false
+  }
+
+  return true
 }
 
 /**
@@ -86,11 +94,27 @@ export const isAdmin = (): boolean => {
 }
 
 /**
- * Get token expiration time (in milliseconds)
+ * Get the JWT expiration timestamp (in milliseconds)
  */
 export const getTokenExpiration = (): number | null => {
-  const expiresIn = localStorage.getItem('expiresIn')
-  return expiresIn ? parseInt(expiresIn, 10) : null
+  const token = getToken()
+  if (!token) return null
+
+  const parts = token.split('.')
+  if (parts.length !== 3 || !parts[1]) return null
+
+  try {
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const claims: unknown = JSON.parse(atob(payload.padEnd(Math.ceil(payload.length / 4) * 4, '=')))
+    if (typeof claims !== 'object' || claims === null || !('exp' in claims)) return null
+
+    return typeof claims.exp === 'number' && Number.isFinite(claims.exp * 1000)
+      ? claims.exp * 1000
+      : null
+  } catch (error) {
+    if (error instanceof SyntaxError || error instanceof DOMException) return null
+    throw error
+  }
 }
 
 /**
@@ -117,4 +141,3 @@ export const getAuthHeader = (): { Authorization: string } | {} => {
     Authorization: `Bearer ${token}`,
   }
 }
-

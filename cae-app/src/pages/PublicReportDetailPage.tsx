@@ -14,7 +14,6 @@ import {
   FormControlLabel,
 } from '@mui/material'
 import {
-  ArrowBack,
   Description,
   DescriptionOutlined,
   Person,
@@ -32,7 +31,7 @@ interface PublicReportDetailPageProps {
   onBack: () => void
 }
 
-export default function PublicReportDetailPage({ reportId, onBack }: PublicReportDetailPageProps) {
+export default function PublicReportDetailPage({ reportId}: PublicReportDetailPageProps) {
   const [report, setReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -142,11 +141,6 @@ export default function PublicReportDetailPage({ reportId, onBack }: PublicRepor
   return (
     <Container maxWidth="md">
       <Box sx={{ py: { xs: 2, sm: 4 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, mb: 3 }}>
-          <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
-            Back
-          </Button>
-        </Box>
 
         {error && (
           <Alert

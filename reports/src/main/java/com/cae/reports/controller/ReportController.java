@@ -1,6 +1,7 @@
 package com.cae.reports.controller;
 
 import com.cae.reports.dto.request.ReportRequest;
+import com.cae.reports.dto.request.ResendReportEmailRequest;
 import com.cae.reports.dto.response.ReportResponse;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.User;
@@ -48,6 +49,22 @@ public class ReportController {
         return reportService.getReportById(id)
                 .map(report -> ResponseEntity.ok(ReportResponse.fromReport(report)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // POST /reports/{id}/resend-email - Resend the report email to the student's contacts
+    @PostMapping("/{id:\\d+}/resend-email")
+    public ResponseEntity<Void> resendReportEmail(
+            @PathVariable Integer id,
+            @RequestBody ResendReportEmailRequest request
+    ) {
+        reportService.resendReportEmail(
+                id,
+                getCurrentUser(),
+                request.getPdfBase64(),
+                request.getPdfFileName(),
+                request.getPdfMimeType()
+        );
+        return ResponseEntity.noContent().build();
     }
 
     // GET /reports/public/{id} - Get a public report by ID

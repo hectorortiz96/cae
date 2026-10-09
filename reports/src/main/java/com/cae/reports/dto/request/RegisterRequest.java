@@ -2,6 +2,7 @@ package com.cae.reports.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
@@ -15,6 +16,11 @@ public class RegisterRequest {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
+    @Pattern(
+            regexp = "^[^@\\s]+@cae\\.edu\\.mx$",
+            flags = Pattern.Flag.CASE_INSENSITIVE,
+            message = "Email must use the @cae.edu.mx domain"
+    )
     private String email;
 
     @NotBlank(message = "Full name is required")
@@ -62,4 +68,3 @@ public class RegisterRequest {
         this.fullName = fullName;
     }
 }
-

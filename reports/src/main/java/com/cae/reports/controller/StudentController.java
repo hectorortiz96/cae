@@ -1,5 +1,7 @@
 package com.cae.reports.controller;
 
+import com.cae.reports.dto.request.UpdateStudentRequest;
+import jakarta.validation.Valid;
 import com.cae.reports.dto.response.StudentBatchImportResponse;
 import com.cae.reports.dto.response.StudentResponse;
 import com.cae.reports.service.StudentService;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,6 +42,21 @@ public class StudentController {
         return ResponseEntity.ok(studentService.getStudentsByGrade(grade).stream()
                 .map(StudentResponse::fromStudent)
                 .toList());
+    }
+
+    @GetMapping("/details")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StudentResponse> getStudentDetails(@RequestParam String fullName) {
+        return ResponseEntity.ok(StudentResponse.fromStudent(studentService.getStudentByFullName(fullName)));
+    }
+
+    @PutMapping("/details")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StudentResponse> updateStudent(
+            @RequestParam String contactemail1,
+            @Valid @RequestBody UpdateStudentRequest request
+    ) {
+        return ResponseEntity.ok(StudentResponse.fromStudent(studentService.updateStudent(contactemail1, request)));
     }
 
     @GetMapping("/name/{name}")

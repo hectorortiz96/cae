@@ -9,10 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -20,17 +22,22 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class EmailNotificationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailNotificationService.class);
     private static final DateTimeFormatter ATTACHMENT_DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final Pattern TEMPLATE_PLACEHOLDER = Pattern.compile("\\$\\{([^}]+)}");
 
     private final JavaMailSender mailSender;
     private final StudentRepository studentRepository;
     private final String fromAddress;
     private final boolean mailEnabled;
     private final String publicReportBaseUrl;
+    private final String reportBodyTemplate;
+    private final String reminderBodyTemplate;
 
     public EmailNotificationService(
             JavaMailSender mailSender,
@@ -44,6 +51,17 @@ public class EmailNotificationService {
         this.fromAddress = fromAddress;
         this.mailEnabled = mailEnabled;
         this.publicReportBaseUrl = normalizeBaseUrl(publicReportBaseUrl);
+        this.reportBodyTemplate = loadTemplate("templates/report-email.txt");
+        this.reminderBodyTemplate = loadTemplate("templates/report-reminder-email.txt");
+    }
+
+    private String loadTemplate(String path) {
+        try {
+            return new ClassPathResource(path)
+                    .getContentAsString(StandardCharsets.UTF_8).replace("\r\n", "\n").stripTrailing();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to load email template: " + path, ex);
+        }
     }
 
     public void notifyReportCreated(Report report, byte[] pdfAttachment, String pdfFileName, String pdfMimeType) {
@@ -70,8 +88,34 @@ public class EmailNotificationService {
             return;
         }
 
-        sendReportEmail(report, student, recipients, pdfAttachment, pdfFileName, pdfMimeType);
+        sendReportEmail(report, student, recipients, pdfAttachment, pdfFileName, pdfMimeType, false);
         LOGGER.info("Sent report-created email for report {} to {}", report.getId(), String.join(", ", recipients));
+    }
+
+    public void resendReportEmail(
+            Report report,
+            byte[] pdfAttachment,
+            String pdfFileName,
+            String pdfMimeType
+    ) {
+        if (!mailEnabled) {
+            throw new IllegalStateException("Email notifications are disabled");
+        }
+
+        String studentName = report.getStudent() == null ? "" : report.getStudent().trim();
+        if (studentName.isEmpty()) {
+            throw new IllegalStateException("Student name is missing for this report");
+        }
+
+        Student student = studentRepository.findByFullNameIgnoreCase(studentName)
+                .orElseThrow(() -> new IllegalStateException("Student was not found"));
+        List<String> recipients = resolveRecipients(student);
+        if (recipients.isEmpty()) {
+            throw new IllegalStateException("No contact email addresses were found for this student");
+        }
+
+        sendReportEmail(report, student, recipients, pdfAttachment, pdfFileName, pdfMimeType, true);
+        LOGGER.info("Resent report email for report {} to {}", report.getId(), String.join(", ", recipients));
     }
 
     private void sendReportEmail(
@@ -80,7 +124,8 @@ public class EmailNotificationService {
             List<String> recipients,
             byte[] pdfAttachment,
             String pdfFileName,
-            String pdfMimeType
+            String pdfMimeType,
+            boolean reminder
     ) {
         try {
             boolean hasAttachment = pdfAttachment != null && pdfAttachment.length > 0;
@@ -89,8 +134,15 @@ public class EmailNotificationService {
 
             helper.setFrom(fromAddress);
             helper.setTo(recipients.toArray(String[]::new));
-            helper.setSubject("New report for " + student.getFullName());
-            helper.setText(buildBody(report));
+            String authorEmail = report.getUser() == null ? null : report.getUser().getEmail();
+            if (authorEmail != null && !authorEmail.isBlank()) {
+                helper.setCc(authorEmail.trim());
+            } else {
+                LOGGER.warn("Sending report email without author CC because the author's email is missing (report id={})", report.getId());
+            }
+            helper.setSubject((reminder ? "Recordatorio: " : "Aviso Importante: ") + report.getReportType().getValue() +
+                    " para " + student.getFullName() + " y Confirmación de Recepción");
+            helper.setText(buildBody(report, reminder ? reminderBodyTemplate : reportBodyTemplate));
 
             if (hasAttachment) {
                 helper.addAttachment(
@@ -121,16 +173,31 @@ public class EmailNotificationService {
         }
     }
 
-    private String buildBody(Report report) {
-        String author = report.getUser() == null ? "Unknown" : report.getUser().getUsername();
+    private String buildBody(Report report, String template) {
+        String author = report.getUser() == null ? "Coordinación Escolar" : report.getUser().getFullName();
+        String reportType = report.getReportType() == null ? "Incidencia Disciplinaria"
+                : switch (report.getReportType().getValue()) {
+                    case "Reporte" -> "un Reporte Disciplinario";
+                    case "Observación" -> "una Observación Disciplinaria";
+                    default -> report.getReportType().getValue();
+        };
 
-        return "A new report has been created.\n\n"
-                + "Student: " + report.getStudent() + "\n"
-                + "Grade: " + report.getGrade().getValue() + "\n"
-                + "Type: " + report.getReportType().getValue() + "\n"
-                + "Author: " + author + "\n"
-                + "Report ID: " + report.getId() + "\n"
-                + "Public link: " + publicReportBaseUrl + "/reports/public/" + report.getId();
+        // Replace placeholders in the template with actual values
+        return TEMPLATE_PLACEHOLDER.matcher(template).replaceAll(match -> {
+            String value = switch (match.group(1)) {
+                case "student" -> String.valueOf(report.getStudent());
+                case "grade" -> report.getGrade().getValue();
+                case "reportType" -> reportType;
+                case "author" -> String.valueOf(author);
+                case "reportId" -> String.valueOf(report.getId());
+                case "date" -> report.getCreatedAt() == null
+                        ? "fecha no disponible"
+                        : ATTACHMENT_DATE_FORMAT.format(report.getCreatedAt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+                case "publicLink" -> publicReportBaseUrl + "/reports/public/" + report.getId();
+                default -> throw new IllegalArgumentException("Unknown report email placeholder: " + match.group(1));
+            };
+            return Matcher.quoteReplacement(value);
+        });
     }
 
     private String normalizeBaseUrl(String baseUrl) {
@@ -189,4 +256,3 @@ public class EmailNotificationService {
         return trimmed;
     }
 }
-

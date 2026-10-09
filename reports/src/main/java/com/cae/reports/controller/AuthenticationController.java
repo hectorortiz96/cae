@@ -15,8 +15,10 @@ import com.cae.reports.service.JwtService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RequestMapping("/auth")
 @RestController
@@ -26,15 +28,18 @@ public class AuthenticationController {
     private final JwtService jwtService;
     private final AuthService authService;
     private final EmailNotificationService emailNotificationService;
+    private final String publicReportBaseUrl;
 
     public AuthenticationController(
             JwtService jwtService,
             AuthService authService,
-            EmailNotificationService emailNotificationService
+            EmailNotificationService emailNotificationService,
+            @Value("${app.public-report.base-url}") String publicReportBaseUrl
     ) {
         this.jwtService = jwtService;
         this.authService = authService;
         this.emailNotificationService = emailNotificationService;
+        this.publicReportBaseUrl = publicReportBaseUrl;
     }
 
     // POST /auth/signup
@@ -68,7 +73,12 @@ public class AuthenticationController {
             PasswordResetToken resetToken = authService.createPasswordResetToken(request.getEmail());
             
             // Send email with reset link
-            String resetLink = "http://localhost:5173/reset-password?token=" + resetToken.getToken();
+            String resetLink = UriComponentsBuilder.fromUriString(publicReportBaseUrl)
+                    .pathSegment("reset-password")
+                    .queryParam("token", resetToken.getToken())
+                    .build()
+                    .encode()
+                    .toUriString();
             emailNotificationService.sendPasswordResetEmail(request.getEmail(), resetLink);
             
             LOGGER.info("Password reset token created for email: {}", request.getEmail());

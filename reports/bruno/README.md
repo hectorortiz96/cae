@@ -28,6 +28,7 @@ The collection includes all API endpoints organized into logical groups:
 - `Delete Report` - Remove a report
 - `Get Public Report by ID` - Access report publicly
 - `Mark Public Report as Received` - Confirm receipt of public report
+- `Resend Report Email` - Send a reminder to student contacts with the report creator in CC (owner or admin only)
 
 ### **Admin**
 - `Get All Users` - List all users (admin only)
@@ -42,6 +43,16 @@ The collection includes all API endpoints organized into logical groups:
 - `Get Students by Name` - Search students by name
 - `Import Students from CSV` - Batch import students (admin only)
 - `Delete All Students` - Remove all students (admin only)
+- `Get Student Details` - Retrieve a student's details by exact full name (admin only)
+- `Update Student` - Update a student's name, grade, and contact emails (admin only)
+
+### New Endpoint Usage
+
+| Request | Endpoint | Notes |
+|---------|----------|-------|
+| Resend Report Email | `POST /reports/{id}/resend-email` | Set `reportId` and log in as the report owner or an admin. Leave the PDF fields empty to omit the attachment, or supply Base64 PDF content and `application/pdf`. Returns `204 No Content`. |
+| Get Student Details | `GET /students/details?fullName=...` | Replace the URL-encoded sample name with the student's exact full name. Requires an admin token. |
+| Update Student | `PUT /students/details?contactemail1=...` | The query parameter identifies the student's current primary email; the JSON body contains the new values. Use grades `1A` through `3C`; secondary email can be `null`. Renaming also updates matching reports. Requires an admin token. |
 
 ## 🚀 Getting Started
 

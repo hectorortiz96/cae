@@ -53,7 +53,7 @@ public class AdminController {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        List<ReportResponse> reports = reportRepository.findByUser(user)
+        List<ReportResponse> reports = reportRepository.findByUserOrderByCreatedAtAscIdAsc(user)
                 .stream()
                 .map(ReportResponse::fromReport)
                 .toList();
@@ -87,4 +87,3 @@ public class AdminController {
         return ResponseEntity.noContent().build();
     }
 }
-

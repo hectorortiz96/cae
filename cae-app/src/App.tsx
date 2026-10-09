@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Box, CircularProgress, CssBaseline } from '@mui/material'
-import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom'
-import { isAuthenticated } from './utils/authUtils'
+import { Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { isAdmin, isAuthenticated } from './utils/authUtils'
 import { AnonymousOnly, RequireAuth } from './routes/AuthGuards'
 
 const LoginPage = lazy(() => import('./pages/LoginPage'))
@@ -14,6 +14,7 @@ const ReportDetailPage = lazy(() => import('./pages/ReportDetailPage'))
 const ReportSearchPage = lazy(() => import('./pages/ReportSearchPage'))
 const UnreceivedReportsPage = lazy(() => import('./pages/UnreceivedReportsPage'))
 const AdminUserDetailPage = lazy(() => import('./pages/AdminUserDetailPage'))
+const EditStudentPage = lazy(() => import('./pages/EditStudentPage'))
 const PublicReportDetailPage = lazy(() => import('./pages/PublicReportDetailPage'))
 
 // Validates URL params and rejects invalid values (non-positive, non-integer).
@@ -47,8 +48,12 @@ const LoginRoute = () => {
 
 const RegisterRoute = () => {
   const navigate = useNavigate()
-  // Render the RegisterPage component and handle navigation on switch to login
-  return <RegisterPage onSwitchToLogin={() => navigate('/login')} />
+  return (
+    <RegisterPage
+      onSwitchToLogin={() => navigate('/login')}
+      onSuccess={() => navigate('/login', { replace: true })}
+    />
+  )
 }
 
 const DashboardRoute = () => {
@@ -103,6 +108,25 @@ const ReportSearchRoute = () => {
       onBack={() => navigate('/dashboard')}
       onLogout={() => navigate('/login', { replace: true })}
       onViewReport={(reportId) => navigate(`/reports/${reportId}`)}
+      onEditStudent={(name) => navigate(`/admin/students/edit?name=${encodeURIComponent(name)}`)}
+    />
+  )
+}
+
+const EditStudentRoute = () => {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const studentName = searchParams.get('name')
+
+  if (!isAdmin() || !studentName?.trim()) {
+    return <Navigate to="/reports/search" replace />
+  }
+
+  return (
+    <EditStudentPage
+      studentName={studentName}
+      onBack={() => navigate('/reports/search')}
+      onSaved={(name) => navigate(`/admin/students/edit?name=${encodeURIComponent(name)}`, { replace: true })}
     />
   )
 }
@@ -245,6 +269,14 @@ function App() {
             }
           />
           <Route path="/reports/public/:reportId" element={<PublicReportDetailRoute />} />
+          <Route
+            path="/admin/students/edit"
+            element={
+              <RequireAuth>
+                <EditStudentRoute />
+              </RequireAuth>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

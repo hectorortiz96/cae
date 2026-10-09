@@ -14,20 +14,20 @@ import {
 import {
   ArrowBack,
   Logout,
-  Link as LinkIcon,
   Description,
   DescriptionOutlined,
   Person,
   School,
   CalendarToday,
   FileDownload,
+  Email,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
-import { getAuthHeader, logout } from '../utils/authUtils'
-import { copyPublicReportLink } from '../utils/publicReportLink'
+import { getAuthHeader, getUser, isAdmin, logout } from '../utils/authUtils'
+import { blobToBase64 } from '../utils/blobToBase64'
 import type { Report } from '../types'
-import { exportReportToPdf } from '../utils/reportPdfExport'
+import { buildReportPdfFile, exportReportToPdf } from '../utils/reportPdfExport'
 
 interface ReportDetailPageProps {
   reportId: number
@@ -39,10 +39,14 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
   const [report, setReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [shareMessage, setShareMessage] = useState('')
-  const [shareError, setShareError] = useState('')
+  const [emailMessage, setEmailMessage] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
   const [exportError, setExportError] = useState('')
   const [exportingPdf, setExportingPdf] = useState(false)
+  const currentUser = getUser()
+  const canResendEmail =
+    report !== null && (isAdmin() || currentUser?.username === report.authorUsername)
 
   useEffect(() => {
     fetchReportDetail()
@@ -82,15 +86,41 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
     onLogout()
   }
 
-  const handleCopyPublicLink = async () => {
-    setShareMessage('')
-    setShareError('')
+  const handleResendEmail = async () => {
+    if (!report) {
+      return
+    }
+
+    setEmailMessage('')
+    setEmailError('')
+    setSendingEmail(true)
 
     try {
-      await copyPublicReportLink(reportId)
-      setShareMessage('Public link copied to clipboard.')
-    } catch {
-      setShareError('Failed to copy public link. Please copy it from the browser address bar.')
+      const { blob, fileName, mimeType } = await buildReportPdfFile(
+        report,
+        `report-${report.id}.pdf`,
+      )
+      await apiFetch<void>(API_ROUTES.reports.resendEmail(reportId), {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: JSON.stringify({
+          pdfBase64: await blobToBase64(blob),
+          pdfFileName: fileName,
+          pdfMimeType: mimeType,
+        }),
+      })
+      setEmailMessage('Report email sent again.')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setEmailError('Session expired. Please log in again.')
+        handleLogout()
+      } else if (err instanceof ApiError) {
+        setEmailError(err.message)
+      } else {
+        setEmailError('Failed to resend report email. Please try again.')
+      }
+    } finally {
+      setSendingEmail(false)
     }
   }
 
@@ -157,14 +187,17 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
             Back to Dashboard
           </Button>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            <Button
-              variant="outlined"
-              startIcon={<LinkIcon />}
-              onClick={handleCopyPublicLink}
-              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-            >
-              Copy Public Link
-            </Button>
+            {canResendEmail && (
+              <Button
+                variant="outlined"
+                startIcon={<Email />}
+                onClick={handleResendEmail}
+                disabled={sendingEmail}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+              >
+                {sendingEmail ? 'Sending Email...' : 'Resend Email'}
+              </Button>
+            )}
             <Button
               variant="contained"
               startIcon={<FileDownload />}
@@ -186,15 +219,15 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
           </Box>
         </Box>
 
-        {shareMessage && (
+        {emailMessage && (
           <Alert severity="success" sx={{ mb: 3 }}>
-            {shareMessage}
+            {emailMessage}
           </Alert>
         )}
 
-        {shareError && (
+        {emailError && (
           <Alert severity="warning" sx={{ mb: 3 }}>
-            {shareError}
+            {emailError}
           </Alert>
         )}
 
@@ -236,6 +269,11 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
                   icon={<CalendarToday />}
                   label={`Created: ${formatDate(report.createdAt)}`}
                   variant="outlined"
+                />
+                <Chip
+                    label={report.received ? 'Acknowledged as received' : 'Pending acknowledgment'}
+                    color={report.received ? 'success' : 'error'}
+                    variant={report.received ? 'filled' : 'outlined'}
                 />
               </Box>
 

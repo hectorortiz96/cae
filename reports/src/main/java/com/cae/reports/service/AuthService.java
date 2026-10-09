@@ -10,6 +10,7 @@ import com.cae.reports.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -51,14 +52,18 @@ public class AuthService {
 
     // Validates user credentials on login and returns the user if successful
     public User authenticate(LoginRequest input) {
+        User user = userRepository.findByUsername(input.getUsername())
+                .or(() -> userRepository.findByEmail(input.getUsername()))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        input.getUsername(),
+                        user.getUsername(),
                         input.getPassword()
                 )
         );
 
-        return userRepository.findByUsername(input.getUsername()).orElseThrow();
+        return user;
     }
 
     // Generates a password reset token and sends an email

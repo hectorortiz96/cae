@@ -5,20 +5,25 @@ import com.cae.reports.dto.response.ReportResponse;
 import com.cae.reports.model.Grade;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.ReportType;
+import com.cae.reports.model.Role;
 import com.cae.reports.model.User;
 import com.cae.reports.repository.ReportRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,6 +95,77 @@ class ReportServiceTests {
     }
 
     @Test
+    void resendReportEmailRequiresOwnershipAndDelegatesToEmailService() {
+        ReportRepository reportRepository = mock(ReportRepository.class);
+        EmailNotificationService emailNotificationService = mock(EmailNotificationService.class);
+        ReportService reportService = new ReportService(reportRepository, emailNotificationService);
+
+        User user = new User();
+        user.setId(11);
+        Report report = new Report();
+        report.setId(42);
+        report.setUser(user);
+        when(reportRepository.findById(42)).thenReturn(Optional.of(report));
+
+        reportService.resendReportEmail(42, user, "cGRm", "report.pdf", "application/pdf");
+
+        verify(emailNotificationService).resendReportEmail(
+                report,
+                "pdf".getBytes(StandardCharsets.UTF_8),
+                "report.pdf",
+                "application/pdf"
+        );
+    }
+
+    @Test
+    void resendReportEmailRejectsReportsOwnedByAnotherUser() {
+        ReportRepository reportRepository = mock(ReportRepository.class);
+        EmailNotificationService emailNotificationService = mock(EmailNotificationService.class);
+        ReportService reportService = new ReportService(reportRepository, emailNotificationService);
+
+        User owner = new User();
+        owner.setId(11);
+        User otherUser = new User();
+        otherUser.setId(12);
+        Report report = new Report();
+        report.setId(42);
+        report.setUser(owner);
+        when(reportRepository.findById(42)).thenReturn(Optional.of(report));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> reportService.resendReportEmail(42, otherUser, null, null, null)
+        );
+        verify(emailNotificationService, never()).resendReportEmail(
+                any(Report.class),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    @Test
+    void resendReportEmailAllowsAdminsToResendReportsTheyDoNotOwn() {
+        ReportRepository reportRepository = mock(ReportRepository.class);
+        EmailNotificationService emailNotificationService = mock(EmailNotificationService.class);
+        ReportService reportService = new ReportService(reportRepository, emailNotificationService);
+
+        User owner = new User();
+        owner.setId(11);
+        User admin = new User();
+        admin.setId(12);
+        admin.setRole(Role.ADMIN);
+        Report report = new Report();
+        report.setId(42);
+        report.setUser(owner);
+        when(reportRepository.findById(42)).thenReturn(Optional.of(report));
+
+        reportService.resendReportEmail(42, admin, null, null, null);
+
+        verify(emailNotificationService).resendReportEmail(report, null, null, null);
+    }
+
+    @Test
     void markReportReceivedSetsFlagAndReturnsResponse() {
         ReportRepository reportRepository = mock(ReportRepository.class);
         EmailNotificationService emailNotificationService = mock(EmailNotificationService.class);
@@ -115,7 +191,8 @@ class ReportServiceTests {
         assertEquals(5, response.getId());
         assertEquals("teacher1", response.getAuthorUsername());
         assertTrue(response.isReceived());
+        assertNotNull(response.getReportReceivedDate());
+        assertEquals(existingReport.getReportReceivedDate(), response.getReportReceivedDate());
         verify(reportRepository).save(existingReport);
     }
 }
-

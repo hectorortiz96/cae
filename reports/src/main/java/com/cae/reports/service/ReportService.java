@@ -5,14 +5,19 @@ import com.cae.reports.dto.request.ReportRequest;
 import com.cae.reports.model.Grade;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.ReportType;
+import com.cae.reports.model.Role;
 import com.cae.reports.model.User;
 import com.cae.reports.repository.ReportRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,24 +67,46 @@ public class ReportService {
         return reportRepository.findById(id);
     }
 
+    public void resendReportEmail(
+            Integer id,
+            User user,
+            String pdfBase64,
+            String pdfFileName,
+            String pdfMimeType
+    ) {
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
+
+        if (!report.getUser().getId().equals(user.getId()) && user.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("You are not authorized to resend this report email");
+        }
+
+        emailNotificationService.resendReportEmail(
+                report,
+                decodePdfAttachment(pdfBase64, report.getId()),
+                pdfFileName,
+                pdfMimeType
+        );
+    }
+
     public List<Report> getReportsByUser(User user) {
-        return reportRepository.findByUser(user);
+        return reportRepository.findByUserOrderByCreatedAtAscIdAsc(user);
     }
 
     public List<Report> getReportsByGrade(String grade) {
-        return reportRepository.findByGrade(Grade.fromValue(grade));
+        return reportRepository.findByGradeOrderByCreatedAtAscIdAsc(Grade.fromValue(grade));
     }
 
     public List<Report> getReportsByReportType(String reportType) {
-        return reportRepository.findByReportType(ReportType.fromValue(reportType));
+        return reportRepository.findByReportTypeOrderByCreatedAtAscIdAsc(ReportType.fromValue(reportType));
     }
 
     public List<Report> getReportsByStudent(String student) {
-        return reportRepository.findByStudentContainingIgnoreCase(student.trim());
+        return reportRepository.findByStudentContainingIgnoreCaseOrderByCreatedAtAscIdAsc(student.trim());
     }
 
     public List<Report> searchReportsByStudent(String studentName) {
-        return reportRepository.findByStudentContainingIgnoreCase(studentName.trim());
+        return reportRepository.findByStudentContainingIgnoreCaseOrderByCreatedAtAscIdAsc(studentName.trim());
     }
 
     public Report updateReport(Integer id, ReportRequest request, User user) {
@@ -106,6 +133,7 @@ public class ReportService {
 
         if (!report.isReceived()) {
             report.setReceived(true);
+            report.setReportReceivedDate(new Date());
             report = reportRepository.save(report);
         }
 

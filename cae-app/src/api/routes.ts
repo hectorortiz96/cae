@@ -18,6 +18,7 @@ export const API_ROUTES = {
     me: '/reports/me',
     searchByStudent: (studentName: string) => `/reports/search?studentName=${encodeURIComponent(studentName)}`,
     byId: (id: number) => `/reports/${id}`,
+    resendEmail: (id: number) => `/reports/${id}/resend-email`,
     publicById: (id: number) => `/reports/public/${id}`,
     publicMarkReceived: (id: number) => `/reports/public/${id}/received`,
     byGrade: (grade: string) => `/reports/grade/${grade}`,
@@ -26,6 +27,8 @@ export const API_ROUTES = {
   },
   students: {
     base: '/students',
+    details: (fullName: string) => `/students/details?fullName=${encodeURIComponent(fullName)}`,
+    update: (contactemail1: string) => `/students/details?contactemail1=${encodeURIComponent(contactemail1)}`,
     import: '/students/import',
     byGrade: (grade: string) => `/students/grade/${grade}`,
     byName: (name: string) => `/students/name/${name}`,

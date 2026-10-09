@@ -110,6 +110,8 @@ function formatDate(dateString: string): string {
   })
 }
 
+
+
 function sanitizeFileName(fileName: string): string {
   return fileName.replace(/[\\/:*?"<>|]+/g, '-').trim()
 }
@@ -129,12 +131,7 @@ function triggerBlobDownload(blob: Blob, fileName: string) {
 }
 
 function ReportPdfDocument({
-  reportType,
-  student,
-  grade,
-  authorName,
-  createdAt,
-  content,
+  reportType, student, grade, authorName, createdAt, content, schoolCycle
 }: {
   reportType: string
   student: string
@@ -142,8 +139,8 @@ function ReportPdfDocument({
   authorName: string
   createdAt: string
   content: string
+  schoolCycle: string
 }) {
-  const generatedAt = formatDate(new Date().toISOString())
 
   if (reportType === 'Observación') {
     return (
@@ -188,7 +185,7 @@ function ReportPdfDocument({
                 Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
               </Text>
 
-              <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
+              <Text style={styles.date}>{schoolCycle}</Text>
 
             </View>
           </Page>
@@ -215,8 +212,8 @@ function ReportPdfDocument({
               <Text style={styles.contentBox}>{content}</Text>
 
               <Text style={styles.text}>
-                Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
-                del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
+                Favor de confirmar para <Text style={styles.fieldValue}>el día siguiente </Text> por medio
+                de nuestro portal para confirmar su recepción. Se les ha mandado un correo electrónico con el enlace para confirmar la recepción de este reporte.
               </Text>
               <Text style={styles.reportTypeNotice}>
                 La conducta tiene un valor del 10% en la calificacion de cada materia.
@@ -237,7 +234,7 @@ function ReportPdfDocument({
                 Nombre del maestro(a): <Text style={styles.fieldValue}>{authorName}</Text>
               </Text>
 
-              <Text style={styles.date}>Archivo creado  {generatedAt}</Text>
+              <Text style={styles.date}>{schoolCycle}</Text>
 
             </View>
           </Page>
@@ -262,6 +259,13 @@ export async function exportReportToPdf(report: Report, _options: ReportPdfExpor
 export async function buildReportPdfFile(report: Report, fileNameOverride?: string): Promise<ReportPdfFile> {
   const currentUserFullName = getUser()?.fullName?.trim() || report.authorFullName || 'unknown'
 
+  const date = new Date(report.createdAt)
+  const year = date.getFullYear()
+  const hasStarted = date.getMonth() > 7 || (date.getMonth() === 7 && date.getDate() >= 31)
+  const startYear = hasStarted ? year : year - 1
+
+  const schoolCycle = `Ciclo Escolar ${startYear}-${startYear + 1}`
+
   const pdfInstance = pdf()
   pdfInstance.updateContainer(
     <ReportPdfDocument
@@ -271,6 +275,7 @@ export async function buildReportPdfFile(report: Report, fileNameOverride?: stri
       authorName={currentUserFullName}
       createdAt={formatDate(report.createdAt)}
       content={report.content || 'No content provided.'}
+      schoolCycle={schoolCycle}
     />,
   )
 

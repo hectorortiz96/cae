@@ -15,11 +15,16 @@ import {
   FormControl,
   FormHelperText,
   Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
 import { Description, ArrowBack, Save } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, getUser } from '../utils/authUtils'
+import { blobToBase64 } from '../utils/blobToBase64'
 import { buildReportPdfFile } from '../utils/reportPdfExport'
 import type { Grade, Report, ReportCreateRequest, ReportFormData, Student } from '../types'
 
@@ -33,18 +38,6 @@ const REPORT_TYPES = [
   { value: 'Observación', label: 'Observación' },
   { value: 'Reporte', label: 'Reporte' },
 ]
-
-const blobToBase64 = (blob: Blob) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const result = typeof reader.result === 'string' ? reader.result : ''
-      const commaIndex = result.indexOf(',')
-      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result)
-    }
-    reader.onerror = () => reject(new Error('Unable to read generated PDF'))
-    reader.readAsDataURL(blob)
-  })
 
 export default function CreateReportPage({ onBack, onSuccess }: CreateReportPageProps) {
   const [students, setStudents] = useState<Student[]>([])
@@ -62,6 +55,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [studentLoadError, setStudentLoadError] = useState<string>('')
   const [success, setSuccess] = useState(false)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const filteredStudents = formData.grade
     ? students.filter((student) => student.grade === formData.grade)
     : []
@@ -140,6 +134,10 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
       newErrors.reportType = 'Report type is required'
     }
 
+    if (!formData.content.trim()) {
+      newErrors.content = 'Report content is required'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -194,6 +192,10 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
       return
     }
 
+    setConfirmDialogOpen(true)
+  }
+
+  const handleConfirmCreate = async () => {
     setLoading(true)
     setApiError('')
 
@@ -209,6 +211,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         authorFullName: getUser()?.fullName || 'unknown',
         createdAt: nowIso,
         received: false,
+        reportReceivedDate: null,
       }
 
       const { blob, fileName, mimeType } = await buildReportPdfFile(
@@ -228,12 +231,14 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         body: JSON.stringify(payload),
       })
 
+      setConfirmDialogOpen(false)
       setSuccess(true)
       // Redirect to dashboard after a short delay
       setTimeout(() => {
         onSuccess()
       }, 1500)
     } catch (err) {
+      setConfirmDialogOpen(false)
       if (err instanceof ApiError) {
         setApiError(err.message)
       } else {
@@ -300,58 +305,6 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
           <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
             <Box component="form" onSubmit={handleSubmit} noValidate>
 
-              {/* Student Name */}
-              <Box sx={{ mb: 3 }}>
-                <Autocomplete
-                  fullWidth
-                  id="student"
-                  options={filteredStudents}
-                  value={selectedStudent}
-                  inputValue={studentInputValue}
-                  loading={loadingStudents}
-                  openOnFocus
-                  onChange={handleStudentChange}
-                  onInputChange={handleStudentInputChange}
-                  getOptionLabel={(option) => option.fullName}
-                  isOptionEqualToValue={(option, value) => option.contactemail1 === value.contactemail1}
-                  disabled={loading || success || !formData.grade}
-                  noOptionsText={
-                    loadingStudents
-                      ? 'Loading students...'
-                      : formData.grade
-                        ? 'No matching students found'
-                        : 'Select a grade first'
-                  }
-                  renderOption={(props, option) => (
-                    <li {...props} key={option.contactemail1}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {option.fullName}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.contactemail1} {option.contactemail2?.trim() ? ` • ${option.contactemail2}` : ''}
-                        </Typography>
-                      </Box>
-                    </li>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Student Name"
-                      variant="outlined"
-                      placeholder={formData.grade ? 'Start typing to search students' : 'Select grade first'}
-                      error={!!errors.student || !!studentLoadError}
-                      helperText={
-                        errors.student || studentLoadError ||
-                        (formData.grade
-                          ? `Select a student from grade ${formData.grade}`
-                          : 'Select a grade first to load students')
-                      }
-                    />
-                  )}
-                />
-              </Box>
-
               {/* Grade and Report Type Row */}
               <Box sx={{ display: 'flex', gap: 3, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <FormControl fullWidth error={!!errors.grade}>
@@ -399,6 +352,58 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                 </FormControl>
               </Box>
 
+              {/* Student Name */}
+              <Box sx={{ mb: 3 }}>
+                <Autocomplete
+                    fullWidth
+                    id="student"
+                    options={filteredStudents}
+                    value={selectedStudent}
+                    inputValue={studentInputValue}
+                    loading={loadingStudents}
+                    openOnFocus
+                    onChange={handleStudentChange}
+                    onInputChange={handleStudentInputChange}
+                    getOptionLabel={(option) => option.fullName}
+                    isOptionEqualToValue={(option, value) => option.contactemail1 === value.contactemail1}
+                    disabled={loading || success || !formData.grade}
+                    noOptionsText={
+                      loadingStudents
+                          ? 'Loading students...'
+                          : formData.grade
+                              ? 'No matching students found'
+                              : 'Select a grade first'
+                    }
+                    renderOption={(props, option) => (
+                        <li {...props} key={option.contactemail1}>
+                          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {option.fullName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {option.contactemail1} {option.contactemail2?.trim() ? ` • ${option.contactemail2}` : ''}
+                            </Typography>
+                          </Box>
+                        </li>
+                    )}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label="Student Name"
+                            variant="outlined"
+                            placeholder={formData.grade ? 'Start typing to search students' : 'Select grade first'}
+                            error={!!errors.student || !!studentLoadError}
+                            helperText={
+                                errors.student || studentLoadError ||
+                                (formData.grade
+                                    ? `Select a student from grade ${formData.grade}`
+                                    : 'Select a grade first to load students')
+                            }
+                        />
+                    )}
+                />
+              </Box>
+
               {/* Content */}
               <Box sx={{ mb: 4 }}>
                 <TextField
@@ -413,7 +418,8 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                   onChange={handleInputChange}
                   disabled={loading || success}
                   placeholder="Enter the detailed content of the report..."
-                  helperText="Describe the observations or report details"
+                  error={!!errors.content}
+                  helperText={errors.content || 'Describe the observations or report details'}
                 />
               </Box>
 
@@ -440,8 +446,54 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
             </Box>
           </CardContent>
         </Card>
+
+        <Dialog
+          open={confirmDialogOpen}
+          onClose={() => {
+            if (!loading) {
+              setConfirmDialogOpen(false)
+            }
+          }}
+          maxWidth="sm"
+          fullWidth
+          aria-labelledby="confirm-report-title"
+        >
+          <DialogTitle id="confirm-report-title">Review Report Details</DialogTitle>
+          <DialogContent dividers>
+            <Typography variant="body2" sx={{ mb: 1 }}>
+              Please review the details before creating this report.
+            </Typography>
+            <Typography variant="subtitle2" color="text.secondary">Student</Typography>
+            <Typography sx={{ mb: 2 }}>{formData.student}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Grade</Typography>
+            <Typography sx={{ mb: 2 }}>{formData.grade}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Report Type</Typography>
+            <Typography sx={{ mb: 2 }}>{formData.reportType}</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Report Content</Typography>
+            <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              {formData.content || 'No content provided'}
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button
+              onClick={() => setConfirmDialogOpen(false)}
+              disabled={loading}
+              sx={{ textTransform: 'none' }}
+            >
+              Go Back
+            </Button>
+            <Button
+              onClick={handleConfirmCreate}
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : undefined}
+              sx={{ textTransform: 'none' }}
+            >
+              {loading ? 'Creating...' : 'Confirm & Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Container>
   )
 }
-

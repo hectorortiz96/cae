@@ -37,6 +37,7 @@ import {
   MarkEmailUnread,
   CheckCircle,
   Cancel,
+  WarningAmber,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
@@ -55,6 +56,7 @@ interface DashboardPageProps {
 export default function DashboardPage({ onLogout, onCreateReport, onViewReport, onViewUser, onSearchReports, onViewUnreceivedReports }: DashboardPageProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [reports, setReports] = useState<Report[]>([])
+  const [reportAgeCutoff] = useState(() => Date.now() - 3 * 24 * 60 * 60 * 1000)
   const [adminUsers, setAdminUsers] = useState<UserInfo[]>([])
   const [adminLoading, setAdminLoading] = useState(false)
   const [adminError, setAdminError] = useState<string>('')
@@ -150,6 +152,19 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
       month: 'short',
       day: 'numeric',
     })
+  }
+
+  const renderReportAgeWarning = (report: Report) => {
+    const isOverdue = !report.received && new Date(report.createdAt).getTime() < reportAgeCutoff
+    if (!isOverdue) {
+      return null
+    }
+
+    return (
+      <Tooltip title="Report older than 3 days">
+        <WarningAmber color="warning" fontSize="small" titleAccess="Report older than 3 days" tabIndex={0} />
+      </Tooltip>
+    )
   }
 
   const getRoleColor = (role: string) => {
@@ -499,7 +514,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Teacher</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '32%' }}>Email</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Role</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '18%' }} align="center">Joined</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '18%' }}>Joined</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -680,8 +695,9 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                             color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                           />
                         </Box>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1, fontSize: '0.82rem' }}>
                           Created {formatDate(report.createdAt)}
+                          {renderReportAgeWarning(report)}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
                            {report.received ? <CheckCircle color="success" /> : <Cancel color="error" />}
@@ -689,18 +705,22 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                              {report.received ? 'Received' : 'Not Received'}
                            </Typography>
                          </Box>
+                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
+                           Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                         </Typography>
                        </Paper>
                      ))}
                    </Box>
 
                    <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
-                     <Table sx={{ minWidth: 680, tableLayout: 'fixed' }}>
+                     <Table sx={{ minWidth: 800, tableLayout: 'fixed' }}>
                        <TableHead>
                          <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',width: '33%' }}>Student</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',width: '25%' }}>Student</TableCell>
                            <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap',width: '12%' }}>Grade</TableCell>
                            <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Type</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created Date</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Received Date</TableCell>
                            <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }} align="center">Received</TableCell>
                          </TableRow>
                        </TableHead>
@@ -739,8 +759,14 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                                />
                              </TableCell>
                              <TableCell>
-                               <Typography variant="body2" color="text.secondary">
+                               <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                  {formatDate(report.createdAt)}
+                                 {renderReportAgeWarning(report)}
+                               </Typography>
+                             </TableCell>
+                             <TableCell>
+                               <Typography variant="body2" color="text.secondary">
+                                 {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
                                </Typography>
                              </TableCell>
                              <TableCell align="center">

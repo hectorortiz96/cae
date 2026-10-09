@@ -232,18 +232,22 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                           Created {formatDate(report.createdAt)}
                         </Typography>
                       </Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                        Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                      </Typography>
                     </Paper>
                   ))}
                 </Box>
 
                 <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
-                  <Table sx={{ minWidth: 680 }}>
+                  <Table sx={{ minWidth: 820 }}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                         <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Grade</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
                         <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Received Date</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -285,6 +289,11 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                           <TableCell>
                             <Typography variant="body2" color="text.secondary">
                               {formatDate(report.createdAt)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
                             </Typography>
                           </TableCell>
                         </TableRow>

@@ -166,7 +166,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                   fullWidth
                   id="username"
                   name="username"
-                  label="Username"
+                  label="Username or email"
                   type="text"
                   variant="outlined"
                   value={formData.username}
@@ -294,4 +294,3 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
     </Container>
   )
 }
-

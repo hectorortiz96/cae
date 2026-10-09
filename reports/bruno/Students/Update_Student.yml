@@ -1,0 +1,20 @@
+info:
+  name: Update Student
+  type: http
+  seq: 7
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/students/details?contactemail1=family1%40example.com"
+  body:
+    type: json
+    data: |-
+      {
+        "fullName": "John Doe",
+        "grade": "2A",
+        "contactemail1": "family1@example.com",
+        "contactemail2": "family2@example.com"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"

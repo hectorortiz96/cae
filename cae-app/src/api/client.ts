@@ -1,4 +1,6 @@
 // Shared API client helper for frontend requests.
+import { getToken, logout } from '../utils/authUtils';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 if (!API_BASE_URL) {
@@ -7,7 +9,7 @@ if (!API_BASE_URL) {
 
 const buildUrl = (path: string) => `${API_BASE_URL}${path}`;
 
-type ErrorPayload = { detail?: string; message?: string; title?: string };
+type ErrorPayload = { detail?: string; message?: string; title?: string; description?: string };
 
 export class ApiError extends Error {
   status: number;
@@ -49,6 +51,16 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
       errorPayload?.message ??
       errorPayload?.title ??
       `Request failed (${response.status})`;
+
+    const token = getToken();
+    const isAuthenticationFailure =
+      response.status === 401 ||
+      (response.status === 403 && errorPayload?.description === 'The JWT token has expired');
+
+    if (isAuthenticationFailure && token && headers.get('Authorization') === `Bearer ${token}`) {
+      logout();
+      window.location.replace('/login');
+    }
 
     throw new ApiError(errorMessage, response.status, payload);
   }

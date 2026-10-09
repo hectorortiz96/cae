@@ -1,0 +1,19 @@
+info:
+  name: Resend Report Email
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: "{{baseUrl}}/reports/{{reportId}}/resend-email"
+  body:
+    type: json
+    data: |-
+      {
+        "pdfBase64": "",
+        "pdfFileName": "",
+        "pdfMimeType": "application/pdf"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"

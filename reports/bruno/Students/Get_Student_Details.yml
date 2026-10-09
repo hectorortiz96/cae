@@ -1,0 +1,11 @@
+info:
+  name: Get Student Details
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{baseUrl}}/students/details?fullName=John%20Doe"
+  auth:
+    type: bearer
+    token: "{{token}}"

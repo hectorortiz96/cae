@@ -29,6 +29,7 @@ export interface Report {
   authorFullName: string
   createdAt: string
   received: boolean
+  reportReceivedDate: string | null
 }
 
 export type ReportPdfFieldKey =
@@ -72,4 +73,3 @@ export interface StudentBatchImportResponse {
   failedRows: number
   errors: StudentBatchImportRowError[]
 }
-

@@ -8,6 +8,7 @@ import {
   Chip,
   CircularProgress,
   Container,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -24,20 +25,23 @@ import {
   Cancel,
   CheckCircle,
   Description,
+  Edit,
   Logout,
 } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
-import { getAuthHeader, logout } from '../utils/authUtils'
+import { getAuthHeader, isAdmin, logout } from '../utils/authUtils'
 import type { Report } from '../types'
 
 interface ReportSearchPageProps {
   onBack: () => void
   onLogout: () => void
   onViewReport: (reportId: number) => void
+  onEditStudent: (studentName: string) => void
 }
 
-export default function ReportSearchPage({ onBack, onLogout, onViewReport }: ReportSearchPageProps) {
+export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEditStudent }: ReportSearchPageProps) {
+  const admin = isAdmin()
   const [studentName, setStudentName] = useState('')
   const [searchedName, setSearchedName] = useState('')
   const [reports, setReports] = useState<Report[]>([])
@@ -182,6 +186,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
         <Card sx={{ boxShadow: 3, mb: 3 }}>
           <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+
               <Description color="primary" />
               <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
                 Search Reports by Student
@@ -261,9 +266,26 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
                     '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
                   }}
                 >
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
-                    {report.student}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    {admin && (
+                      <Tooltip title="Edit Student">
+                        <IconButton
+                          size="small"
+                          aria-label={`Edit student ${report.student}`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onEditStudent(report.student)
+                          }}
+                          onKeyDown={(event) => event.stopPropagation()}
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
+                      {report.student}
+                    </Typography>
+                  </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                     <Chip label={report.grade} size="small" variant="outlined" />
                     <Chip
@@ -276,6 +298,9 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
                     Created {formatDate(report.createdAt)}
                   </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
+                    Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                  </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
                     {report.received ? <CheckCircle color="success" fontSize="small" /> : <Cancel color="error" fontSize="small" />}
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.82rem' }}>
@@ -287,15 +312,16 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
             </Box>
 
             <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
-              <Table sx={{ minWidth: 900, tableLayout: 'fixed' }}>
+              <Table sx={{ minWidth: 1040, tableLayout: 'fixed' }}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '25%' }}>Student</TableCell>
-                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '25%' }}>Author</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Grade</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Type</TableCell>
+                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '22%' }}>Student</TableCell>
+                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '20%' }}>Author</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '10%' }}>Grade</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '11%' }}>Type</TableCell>
                     <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '13%' }}>Created</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '13%' }} align="center">Received</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '15%' }}>Received Date</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '9%' }} align="center">Received</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -321,20 +347,39 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
                         },
                       }}
                     >
-                      <TableCell sx={{ ...tableTextCellSx, width: '30%' }}>
-                        <Tooltip title={report.student}>
-                          <span>{report.student}</span>
-                        </Tooltip>
+                      <TableCell sx={{ ...tableTextCellSx, width: '22%' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                          {admin && (
+                            <Tooltip title="Edit Student">
+                              <IconButton
+                                size="small"
+                                aria-label={`Edit student ${report.student}`}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  onEditStudent(report.student)
+                                }}
+                                onKeyDown={(event) => event.stopPropagation()}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          <Tooltip title={report.student}>
+                            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {report.student}
+                            </Box>
+                          </Tooltip>
+                        </Box>
                       </TableCell>
-                      <TableCell sx={{ ...tableTextCellSx, width: '25%' }}>
+                      <TableCell sx={{ ...tableTextCellSx, width: '20%' }}>
                         <Tooltip title={report.authorFullName}>
                           <span>{report.authorFullName}</span>
                         </Tooltip>
                       </TableCell>
-                      <TableCell sx={{ width: '12%' }}>
+                      <TableCell sx={{ width: '10%' }}>
                         <Chip label={report.grade} size="small" variant="outlined" />
                       </TableCell>
-                      <TableCell sx={{ width: '12%' }}>
+                      <TableCell sx={{ width: '11%' }}>
                         <Chip
                           label={report.reportType}
                           size="small"
@@ -346,7 +391,12 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport }: Rep
                           {formatDate(report.createdAt)}
                         </Typography>
                       </TableCell>
-                      <TableCell align="center" sx={{ width: '8%' }}>
+                      <TableCell sx={{ width: '15%' }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center" sx={{ width: '9%' }}>
                         <Tooltip title={report.received ? 'Received' : 'Not Received'}>
                           {report.received ? <CheckCircle color="success" /> : <Cancel color="error" />}
                         </Tooltip>

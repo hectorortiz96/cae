@@ -1,0 +1,17 @@
+Estimados padres de familia:
+
+Les enviamos un recordatorio para revisar y confirmar la recepción de ${reportType} correspondiente a su hijo(a), ${student}, del grupo ${grade}, emitido el día ${date}.
+
+Este correo da seguimiento al aviso enviado anteriormente y no corresponde a una nueva incidencia.
+
+Les solicitamos ingresar al siguiente enlace para consultar los detalles y confirmar su recepción:
+
+Sitio de confirmación:
+${publicLink}
+
+Si ya confirmaron la recepción, pueden omitir este recordatorio. En caso de tener alguna duda, favor de comunicarse con el maestro(a).
+
+Agradecemos su atención y apoyo.
+
+Atentamente,
+${author}

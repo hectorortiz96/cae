@@ -1,8 +1,0 @@
-{
-  "variables": {
-    "baseUrl": "http://localhost:8080",
-    "token": "",
-    "userId": "1"
-  }
-}
-

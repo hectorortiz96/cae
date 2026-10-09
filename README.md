@@ -1,5 +1,24 @@
 # cae
 
+## Admin student editing
+
+Admins can select **Edit Student** on a result in **Search Reports by Student**
+(including the mobile card view) to update the student's full name, grade, and
+contact emails. Renaming a student updates matching existing reports; their
+original grades remain unchanged.
+
+Both endpoints require the `ADMIN` role:
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/students/details?fullName=<encoded name>` | Load a student by exact name, case-insensitively |
+| PUT | `/students/details?contactemail1=<encoded original email>` | Update the student identified by their original primary contact email |
+
+The PUT body contains `fullName`, `grade` (`1A` through `3C`), `contactemail1`,
+and optional `contactemail2`. Blank secondary emails are cleared. Invalid input
+returns `400`, missing students return `404`, and conflicting names or primary
+emails return `409`.
+
 ## Testing Quick Start
 
 Backend tests live in `reports/src/test/java`.

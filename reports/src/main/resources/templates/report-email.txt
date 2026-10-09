@@ -1,0 +1,17 @@
+Estimados padres de familia:
+
+Por medio de la presente les informamos que su hijo(a), ${student}, del grupo ${grade}, recibió ${reportType} el día ${date} debido a una situación ocurrida durante su estancia en la escuela.
+
+Adjunto al correo encontrarán un archivo PDF con la informacion completa para su revisión.
+
+Con el fin de mantenerlos informados y dar seguimiento oportuno a este asunto, les solicitamos ingresar a nuestro portal para revisar los detalles y confirmar su recepción.
+
+Sitio de confirmación:
+${publicLink}
+
+Les agradeceremos confirmación a la brevedad posible. En caso de tener alguna duda, favor de comunicarse con el maestro(a).
+
+Agradecemos su atención y apoyo para continuar fortaleciendo el desarrollo académico y formativo de su hijo(a).
+
+Atentamente,
+${author}

@@ -14,11 +14,12 @@ public class ReportResponse {
     private String authorFullName;
     private Date createdAt;
     private boolean received;
+    private Date reportReceivedDate;
 
     public ReportResponse() {
     }
 
-    public ReportResponse(Integer id, String content, String student, String grade, String reportType, String authorUsername, String authorFullName, Date createdAt, boolean received) {
+    public ReportResponse(Integer id, String content, String student, String grade, String reportType, String authorUsername, String authorFullName, Date createdAt, boolean received, Date reportReceivedDate) {
         this.id = id;
         this.content = content;
         this.student = student;
@@ -28,6 +29,7 @@ public class ReportResponse {
         this.authorFullName = authorFullName;
         this.createdAt = createdAt;
         this.received = received;
+        this.reportReceivedDate = reportReceivedDate;
     }
 
     // Factory method to convert Report entity to ReportResponse DTO
@@ -41,7 +43,8 @@ public class ReportResponse {
                 report.getUser().getUsername(),
                 report.getUser().getFullName(),
                 report.getCreatedAt(),
-                report.isReceived()
+                report.isReceived(),
+                report.getReportReceivedDate()
         );
     }
 
@@ -116,5 +119,13 @@ public class ReportResponse {
 
     public void setReceived(boolean received) {
         this.received = received;
+    }
+
+    public Date getReportReceivedDate() {
+        return reportReceivedDate;
+    }
+
+    public void setReportReceivedDate(Date reportReceivedDate) {
+        this.reportReceivedDate = reportReceivedDate;
     }
 }

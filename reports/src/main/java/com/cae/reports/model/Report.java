@@ -44,6 +44,10 @@ public class Report {
     @Column(name = "received", nullable = false)
     private boolean received = false;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "report_received_date")
+    private Date reportReceivedDate;
+
 
     public Report() {
     }
@@ -131,5 +135,13 @@ public class Report {
 
     public void setReceived(boolean received) {
         this.received = received;
+    }
+
+    public Date getReportReceivedDate() {
+        return reportReceivedDate;
+    }
+
+    public void setReportReceivedDate(Date reportReceivedDate) {
+        this.reportReceivedDate = reportReceivedDate;
     }
 }

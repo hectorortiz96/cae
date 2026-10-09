@@ -12,6 +12,10 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, String> {
     boolean existsByFullNameIgnoreCase(String fullName);
 
+    boolean existsByFullNameIgnoreCaseAndContactemail1Not(String fullName, String contactemail1);
+
+    boolean existsByContactemail1IgnoreCaseAndContactemail1Not(String contactemail1, String originalContactemail1);
+
     Optional<Student> findByFullNameIgnoreCase(String fullName);
 
     List<Student> findByGrade(Grade grade);

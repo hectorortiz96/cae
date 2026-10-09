@@ -23,3 +23,20 @@ DEALLOCATE PREPARE stmt_received_add;
 
 UPDATE `report` SET `received` = 0 WHERE `received` IS NULL;
 ALTER TABLE `report` MODIFY COLUMN `received` TINYINT(1) NOT NULL DEFAULT 0;
+
+-- Ensure report_received_date exists for recording receipt confirmations.
+SET @report_received_date_exists := (
+    SELECT COUNT(*)
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'report'
+      AND column_name = 'report_received_date'
+);
+SET @report_received_date_add_sql := IF(
+    @report_received_date_exists = 0,
+    'ALTER TABLE `report` ADD COLUMN `report_received_date` TIMESTAMP NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt_report_received_date_add FROM @report_received_date_add_sql;
+EXECUTE stmt_report_received_date_add;
+DEALLOCATE PREPARE stmt_report_received_date_add;

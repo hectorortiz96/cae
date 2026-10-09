@@ -1,0 +1,2 @@
+ALTER TABLE report
+    ADD COLUMN report_received_date TIMESTAMP NULL DEFAULT NULL;

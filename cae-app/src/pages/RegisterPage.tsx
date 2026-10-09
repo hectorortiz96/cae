@@ -23,7 +23,7 @@ interface RegisterFormData {
   fullName: string
 }
 
-export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: () => void }) {
+export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchToLogin?: () => void; onSuccess: () => void }) {
   const [formData, setFormData] = useState<RegisterFormData>({
     username: '',
     password: '',
@@ -31,7 +31,6 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
     fullName: '',
   })
   const [error, setError] = useState<string>('')
-  const [success, setSuccess] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -48,7 +47,6 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
     e.preventDefault()
     setLoading(true)
     setError('')
-    setSuccess('')
 
     try {
       // Validate inputs
@@ -73,6 +71,12 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
         return
       }
 
+      if (!formData.email.toLowerCase().endsWith('@cae.edu.mx')) {
+        setError('Email must use the @cae.edu.mx domain')
+        setLoading(false)
+        return
+      }
+
       await apiFetch(API_ROUTES.auth.signup, {
         method: 'POST',
         body: JSON.stringify({
@@ -83,14 +87,7 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
         }),
       })
 
-      // Registration successful
-      setSuccess(`Account created successfully! You can now login with username: ${formData.username}`)
-      setFormData({
-        username: '',
-        password: '',
-        email: '',
-        fullName: '',
-      })
+      onSuccess()
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message)
@@ -148,12 +145,9 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
               </Typography>
             </Box>
 
-            {/* Success Alert */}
-            {success && (
-              <Alert severity="success" sx={{ mb: 3, borderRadius: 1 }}>
-                {success}
-              </Alert>
-            )}
+            <Alert severity="info" sx={{ mb: 3, borderRadius: 1 }}>
+              We recommend using the same email address and username as your education account.
+            </Alert>
 
             {/* Error Alert */}
             {error && (
@@ -207,12 +201,13 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
                   fullWidth
                   id="email"
                   name="email"
-                  label="Email Address"
+                  label="Email Address (@cae.edu.mx)"
                   type="email"
                   variant="outlined"
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={loading}
+                  helperText="Use your @cae.edu.mx email address"
                   slotProps={{
                     input: {
                       startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
@@ -316,6 +311,9 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
           <Typography variant="caption" sx={{ display: 'block' }}>
             ✓ Email must be unique
           </Typography>
+          <Typography variant="caption" sx={{ display: 'block' }}>
+            ✓ Email must use the @cae.edu.mx domain
+          </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
             Please check the browser console (F12) for detailed error messages if registration fails.
           </Typography>
@@ -324,7 +322,4 @@ export default function RegisterPage({ onSwitchToLogin }: { onSwitchToLogin?: ()
     </Container>
   )
 }
-
-
-
 
