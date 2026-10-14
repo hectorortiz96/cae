@@ -64,3 +64,10 @@ npx tsc -b
 npx vite build
 ```
 
+### Deploying to Cloud Run with Docker
+
+Set the repository source/build context to `cae-app`, where the Dockerfile and
+package manifests are located. The container listens on Cloud Run's `PORT`
+environment variable (8080 by default). Vite embeds the API URL at build time;
+set the Docker build argument `VITE_API_BASE_URL` to the production API URL, or
+provide that value in `.env.production`.

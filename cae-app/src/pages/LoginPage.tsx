@@ -17,6 +17,7 @@ import {
 import { Lock, Person, Visibility, VisibilityOff } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
+import caeLogo from '../assets/cae_logo.png'
 
 interface LoginFormData {
   username: string
@@ -131,18 +132,11 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
             {/* Header */}
             <Box sx={{ textAlign: 'center', mb: 3 }}>
               <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  backgroundColor: '#1976d2',
-                  mb: 2,
-                }}
+                component="img"
+                src={caeLogo}
+                alt="CAE logo"
+                sx={{ width: 224, height: 224, objectFit: 'contain', mb: 2 }}
               >
-                <Lock sx={{ color: 'white', fontSize: 28 }} />
               </Box>
               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
                 Welcome Back

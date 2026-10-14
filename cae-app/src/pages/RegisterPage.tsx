@@ -201,7 +201,7 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   fullWidth
                   id="email"
                   name="email"
-                  label="Email Address (@cae.edu.mx)"
+                  label="Email Address"
                   type="email"
                   variant="outlined"
                   value={formData.email}
