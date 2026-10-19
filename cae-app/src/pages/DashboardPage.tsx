@@ -107,17 +107,17 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         } catch (adminErr) {
           if (adminErr instanceof ApiError) {
             if (adminErr.status === 401) {
-              setError('Session expired. Please log in again.')
+              setError('La sesión venció. Inicie sesión de nuevo.')
               handleLogout()
               return
             }
             if (adminErr.status === 403) {
-              setAdminError('You do not have permission to view users.')
+              setAdminError('No tiene permiso para ver a los usuarios.')
             } else {
               setAdminError(adminErr.message)
             }
           } else {
-            setAdminError('Failed to load users list.')
+            setAdminError('No se pudo cargar la lista de usuarios.')
           }
         } finally {
           setAdminLoading(false)
@@ -126,13 +126,13 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
-          setError('Session expired. Please log in again.')
+          setError('La sesión venció. Inicie sesión de nuevo.')
           handleLogout()
           return
         }
         setError(err.message)
       } else {
-        setError('Failed to load dashboard data. Please try again.')
+        setError('No se pudieron cargar los datos del panel. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -147,7 +147,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -161,8 +161,8 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
     }
 
     return (
-      <Tooltip title="Report older than 3 days">
-        <WarningAmber color="warning" fontSize="small" titleAccess="Report older than 3 days" tabIndex={0} />
+      <Tooltip title="Reporte con más de 3 días">
+        <WarningAmber color="warning" fontSize="small" titleAccess="Reporte con más de 3 días" tabIndex={0} />
       </Tooltip>
     )
   }
@@ -215,12 +215,12 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
       })
 
       setStudentImportSummary(response)
-      setStudentActionMessage('Student import completed.')
+      setStudentActionMessage('La importación de alumnos se completó.')
     } catch (importErr) {
       if (importErr instanceof ApiError) {
         setStudentActionError(importErr.message)
       } else {
-        setStudentActionError('Failed to import students. Please try again.')
+        setStudentActionError('No se pudieron importar los alumnos. Inténtelo de nuevo.')
       }
     } finally {
       setImportingStudents(false)
@@ -248,12 +248,12 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         method: 'DELETE',
         headers: getAuthHeader(),
       })
-      setStudentActionMessage('All student records were deleted.')
+      setStudentActionMessage('Se eliminaron todos los registros de alumnos.')
     } catch (deleteErr) {
       if (deleteErr instanceof ApiError) {
         setStudentActionError(deleteErr.message)
       } else {
-        setStudentActionError('Failed to delete student records. Please try again.')
+        setStudentActionError('No se pudieron eliminar los registros de alumnos. Inténtelo de nuevo.')
       }
     } finally {
       setDeletingStudents(false)
@@ -292,16 +292,16 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
           }}
         >
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.8rem', sm: '2.125rem' }, width: '100%' }}>
-            Dashboard
+            Panel
           </Typography>
           <Button
             variant="outlined"
             color="error"
             startIcon={<Logout />}
             onClick={handleLogout}
-            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
+            sx={{ textTransform: 'none', whiteSpace: 'nowrap', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
           >
-            Logout
+            Cerrar sesión
           </Button>
         </Box>
 
@@ -333,7 +333,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                       {userInfo.fullName}
                     </Typography>
                     <Chip
-                      label={userInfo.role}
+                      label={userInfo.role === 'ADMIN' ? 'Admin' : userInfo.role === 'USER' ? 'Usuario' : userInfo.role}
                       color={getRoleColor(userInfo.role) as any}
                       size="small"
                     />
@@ -350,7 +350,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <CalendarToday fontSize="small" />
                       <Typography variant="body2">
-                        Joined {formatDate(userInfo.createdAt)}
+                        Se unió el {formatDate(userInfo.createdAt)}
                       </Typography>
                     </Box>
                   </Box>
@@ -377,7 +377,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Group color="primary" />
                   <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                    Admin Panel - Users
+                    Administración de usuarios
                   </Typography>
                   <Chip label={adminUsers.length} size="small" color="primary" />
                 </Box>
@@ -387,7 +387,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   onClick={fetchDashboardData}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  Refresh
+                  Actualizar
                 </Button>
               </Box>
 
@@ -406,7 +406,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   disabled={importingStudents || deletingStudents}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  {importingStudents ? 'Importing...' : 'Import Students CSV'}
+                  {importingStudents ? 'Importando...' : 'Importar alumnos desde CSV'}
                 </Button>
 
                 <Button
@@ -417,7 +417,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   disabled={importingStudents || deletingStudents}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  {deletingStudents ? 'Deleting...' : 'Delete All Students'}
+                  {deletingStudents ? 'Eliminando...' : 'Eliminar todos los alumnos'}
                 </Button>
 
                 <input
@@ -443,12 +443,12 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
 
               {studentImportSummary && (
                 <Alert severity={studentImportSummary.failedRows > 0 ? 'warning' : 'success'} sx={{ mb: 2 }}>
-                  Imported {studentImportSummary.createdRows} of {studentImportSummary.totalRows} rows. Failed:{' '}
+                  Se importaron {studentImportSummary.createdRows} de {studentImportSummary.totalRows} filas. Errores:{' '}
                   {studentImportSummary.failedRows}.
                   {studentImportSummary.errors.length > 0 && (
                     <>
                       {' '}
-                      First error (row {studentImportSummary.errors[0].row}): {studentImportSummary.errors[0].message}
+                      Primer error (fila {studentImportSummary.errors[0].row}): {studentImportSummary.errors[0].message}
                     </>
                   )}
                 </Alert>
@@ -492,14 +492,14 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                                @{user.username}
                              </Typography>
                            </Box>
-                          <Chip label={user.role} color={getRoleColor(user.role) as any} size="small" />
+                          <Chip label={user.role === 'ADMIN' ? 'Admin' : user.role === 'USER' ? 'Usuario' : user.role} color={getRoleColor(user.role) as any} size="small" />
                         </Box>
                         <Typography variant="body2" sx={{ mt: 1 }}>
                           {user.email}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                           <Typography variant="caption" color="text.secondary">
-                            Joined {formatDate(user.createdAt)}
+                            Se unió el {formatDate(user.createdAt)}
                           </Typography>
                         </Box>
                       </Paper>
@@ -510,11 +510,11 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                     <Table sx={{ minWidth: 680, tableLayout: 'fixed' }}>
                       <TableHead>
                         <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>User</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Teacher</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '32%' }}>Email</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Role</TableCell>
-                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '18%' }}>Joined</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>Usuario</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Docente</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '32%' }}>Correo electrónico</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Rol</TableCell>
+                          <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '18%' }}>Se unió</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -545,7 +545,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                             <TableCell sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '32%' }}>{user.email}</TableCell>
                             <TableCell sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '12%' }}>
                               <Chip
-                                label={user.role}
+                                label={user.role === 'ADMIN' ? 'Admin' : user.role === 'USER' ? 'Usuario' : user.role}
                                 color={getRoleColor(user.role) as any}
                                 size="small"
                               />
@@ -582,7 +582,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Description color="primary" />
                 <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                  My Reports
+                  Mis incidencias
                 </Typography>
                 <Chip label={reports.length} size="small" color="primary" />
               </Box>
@@ -600,7 +600,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   onClick={onSearchReports}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  Search by Student
+                  Buscar por alumno
                 </Button>
                 <Button
                   variant="outlined"
@@ -609,7 +609,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   onClick={onViewUnreceivedReports}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  Unreceived Reports
+                  Incidencias sin confirmar
                 </Button>
                 <Button
                   variant="contained"
@@ -617,7 +617,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   onClick={onCreateReport}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  Create New Report
+                  Crear incidencia nueva
                 </Button>
               </Box>
             </Box>
@@ -632,10 +632,10 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
               >
                 <Description sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
                 <Typography variant="h6" sx={{ mb: 1 }}>
-                  No reports yet
+                  Todavía no hay incidencias
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 3 }}>
-                  Create your first report to get started
+                  Cree su primera incidencia para comenzar
                 </Typography>
                 <Button
                   variant="outlined"
@@ -643,7 +643,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                   onClick={onCreateReport}
                   sx={{ textTransform: 'none' }}
                 >
-                  Create Report
+                  Crear reporte
                 </Button>
               </Box>
             ) : (
@@ -696,17 +696,17 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                           />
                         </Box>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1, fontSize: '0.82rem' }}>
-                          Created {formatDate(report.createdAt)}
+                          Creado el {formatDate(report.createdAt)}
                           {renderReportAgeWarning(report)}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
                            {report.received ? <CheckCircle color="success" /> : <Cancel color="error" />}
                           <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.82rem' }}>
-                             {report.received ? 'Received' : 'Not Received'}
+                             {report.received ? 'Recibido' : 'No recibido'}
                            </Typography>
                          </Box>
                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
-                           Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                           Fecha de recepción: {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
                          </Typography>
                        </Paper>
                      ))}
@@ -716,12 +716,12 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                      <Table sx={{ minWidth: 800, tableLayout: 'fixed' }}>
                        <TableHead>
                          <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',width: '25%' }}>Student</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap',width: '12%' }}>Grade</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Type</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created Date</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Received Date</TableCell>
-                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }} align="center">Received</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',width: '25%' }}>Alumno</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap',width: '12%' }}>Grupo</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tipo</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Fecha de creación</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Fecha de recepción</TableCell>
+                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }} align="center">Recibido</TableCell>
                          </TableRow>
                        </TableHead>
                        <TableBody>
@@ -770,7 +770,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                                </Typography>
                              </TableCell>
                              <TableCell align="center">
-                               <Tooltip title={report.received ? 'Received' : 'Not Received'}>
+                               <Tooltip title={report.received ? 'Recibido' : 'No recibido'}>
                                  {report.received ? <CheckCircle color="success" /> : <Cancel color="error" />}
                                </Tooltip>
                              </TableCell>
@@ -785,16 +785,16 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
          </Card>
 
          <Dialog open={showImportInfoDialog} onClose={() => setShowImportInfoDialog(false)} maxWidth="sm" fullWidth>
-           <DialogTitle>CSV Import Format</DialogTitle>
+           <DialogTitle>Formato de importación CSV</DialogTitle>
            <DialogContent>
              <Typography variant="body2" sx={{ mb: 1 }}>
-               Use an optional header row:
+               Puede incluir una fila de encabezados opcional:
              </Typography>
              <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, mb: 2, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                fullName,grade,contactemail1,contactemail2
              </Typography>
              <Typography variant="body2" sx={{ mb: 1 }}>
-               Each data row must have 3 or 4 columns:
+               Cada fila de datos debe tener 3 o 4 columnas:
              </Typography>
              <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                fullName,grade,contactemail1[,contactemail2]
@@ -802,27 +802,27 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
            </DialogContent>
            <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: 2, pb: 2 }}>
              <Button onClick={() => setShowImportInfoDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
-               Cancel
+               Cancelar
              </Button>
              <Button variant="contained" onClick={handleConfirmImportDialog} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
-               Choose CSV File
+               Seleccionar archivo CSV
              </Button>
            </DialogActions>
          </Dialog>
 
          <Dialog open={showDeleteWarningDialog} onClose={() => setShowDeleteWarningDialog(false)} maxWidth="sm" fullWidth>
-           <DialogTitle>Delete All Students?</DialogTitle>
+           <DialogTitle>¿Eliminar a todos los alumnos?</DialogTitle>
            <DialogContent>
              <Alert severity="warning" sx={{ mb: 2 }}>
-               This action permanently deletes all student records and cannot be undone.
+               Esta acción elimina permanentemente todos los registros de alumnos y no se puede deshacer.
              </Alert>
              <Typography variant="body2">
-               Only continue if you are sure you want to remove every student.
+               Continúe solo si está seguro de que desea eliminar a todos los alumnos.
              </Typography>
            </DialogContent>
            <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: 2, pb: 2 }}>
              <Button onClick={() => setShowDeleteWarningDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
-               Cancel
+               Cancelar
              </Button>
              <Button
                variant="contained"
@@ -831,7 +831,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                disabled={deletingStudents}
                sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}
              >
-               Delete All Students
+               Eliminar a todos los alumnos
              </Button>
            </DialogActions>
          </Dialog>

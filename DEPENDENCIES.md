@@ -129,6 +129,28 @@ To remove the database volume as well:
 docker compose down -v
 ```
 
+## Production on Cloud Run with Cloud SQL
+
+The backend can use Cloud SQL on Cloud Run while local development continues to use the MySQL service in Docker Compose. The Cloud SQL Java socket factory is included in the backend and uses Cloud Run's Application Default Credentials to establish the secure connection.
+
+1. Create a MySQL database and an application database user in the Cloud SQL instance. The instance and database should use `utf8mb4` / `utf8mb4_unicode_ci`.
+2. Enable the Cloud SQL Admin API. Give the Cloud Run service identity the **Cloud SQL Client** IAM role.
+3. In the Cloud Run service configuration, attach the Cloud SQL instance. The instance connection name is in the format `PROJECT_ID:REGION:INSTANCE_NAME`.
+4. Configure these backend environment variables in Cloud Run:
+
+   | Variable | Value |
+   |----------|-------|
+   | `SPRING_PROFILES_ACTIVE` | `prod` |
+   | `SPRING_DATASOURCE_URL` | `jdbc:mysql:///cae-reports?cloudSqlInstance=reportes-cae:northamerica-south1:cae-reports&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=UTC` |
+   | `SPRING_DATASOURCE_USERNAME` | `cae_admin` |
+   | `SPRING_DATASOURCE_PASSWORD` | Store as a Secret Manager secret and map it to this variable |
+
+   Do not use `mysql` as the host in this URL: Cloud Run connects through the Cloud SQL connector, not the local Compose network.
+
+5. Keep `.env.local` and the local Docker Compose MySQL configuration unchanged for development. Hibernate creates/updates the application tables when the backend starts against an empty database, provided the Cloud SQL user has the required DDL permissions.
+
+The Cloud SQL connector handles secure transport and instance authentication; the datasource username/password still authenticate the application to MySQL. Do not commit production passwords or other secrets to the repository.
+
 ### Useful commands
 
 ```bash

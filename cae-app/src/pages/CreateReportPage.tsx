@@ -74,7 +74,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         if (err instanceof ApiError) {
           setStudentLoadError(err.message)
         } else {
-          setStudentLoadError('Failed to load students. Please try again.')
+          setStudentLoadError('No se pudieron cargar los alumnos. Inténtelo de nuevo.')
         }
       } finally {
         setLoadingStudents(false)
@@ -121,21 +121,21 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
     const newErrors: Partial<ReportFormData> = {}
 
     if (!formData.student.trim()) {
-      newErrors.student = 'Please select a student from the list'
+      newErrors.student = 'Seleccione un alumno de la lista.'
     } else if (formData.student.length > 150) {
-      newErrors.student = 'Student name must not exceed 150 characters'
+      newErrors.student = 'El nombre del alumno no debe superar los 150 caracteres.'
     }
 
     if (!formData.grade) {
-      newErrors.grade = 'Grade is required'
+      newErrors.grade = 'El grupo es obligatorio.'
     }
 
     if (!formData.reportType) {
-      newErrors.reportType = 'Report type is required'
+      newErrors.reportType = 'El tipo de reporte es obligatorio.'
     }
 
     if (!formData.content.trim()) {
-      newErrors.content = 'Report content is required'
+      newErrors.content = 'El contenido del reporte es obligatorio.'
     }
 
     setErrors(newErrors)
@@ -242,7 +242,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
       if (err instanceof ApiError) {
         setApiError(err.message)
       } else {
-        setApiError('Failed to create report. Please try again.')
+        setApiError('No se pudo crear el reporte. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -259,7 +259,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
             onClick={onBack}
             sx={{ mb: 2, textTransform: 'none' }}
           >
-            Back to Dashboard
+            Volver al panel
           </Button>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexDirection: { xs: 'column', sm: 'row' }, textAlign: { xs: 'center', sm: 'left' } }}>
             <Box
@@ -277,10 +277,10 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
             </Box>
             <Box>
               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
-                Create New Report
+                Crear incidencia
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Fill in the details below to create a new report
+                Complete los datos a continuación para crear una incidencia nueva
               </Typography>
             </Box>
           </Box>
@@ -289,7 +289,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
         {/* Success Alert */}
         {success && (
           <Alert severity="success" sx={{ mb: 3 }}>
-            Report created successfully! Redirecting to dashboard...
+            La incidencia se creó correctamente. Redirigiendo al panel...
           </Alert>
         )}
 
@@ -308,13 +308,13 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               {/* Grade and Report Type Row */}
               <Box sx={{ display: 'flex', gap: 3, mb: 3, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <FormControl fullWidth error={!!errors.grade}>
-                  <InputLabel id="grade-label">Grade</InputLabel>
+                  <InputLabel id="grade-label">Grupo</InputLabel>
                   <Select
                     labelId="grade-label"
                     id="grade"
                     name="grade"
                     value={formData.grade}
-                    label="Grade"
+                    label="Grupo"
                     onChange={(e) =>
                       handleInputChange({ target: { name: 'grade', value: e.target.value } })
                     }
@@ -330,13 +330,13 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                 </FormControl>
 
                 <FormControl fullWidth error={!!errors.reportType}>
-                  <InputLabel id="reportType-label">Report Type</InputLabel>
+                  <InputLabel id="reportType-label">Tipo de reporte</InputLabel>
                   <Select
                     labelId="reportType-label"
                     id="reportType"
                     name="reportType"
                     value={formData.reportType}
-                    label="Report Type"
+                    label="Tipo de reporte"
                     onChange={(e) =>
                       handleInputChange({ target: { name: 'reportType', value: e.target.value } })
                     }
@@ -369,10 +369,10 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                     disabled={loading || success || !formData.grade}
                     noOptionsText={
                       loadingStudents
-                          ? 'Loading students...'
+                          ? 'Cargando alumnos...'
                           : formData.grade
-                              ? 'No matching students found'
-                              : 'Select a grade first'
+                              ? 'No se encontraron alumnos que coincidan'
+                              : 'Seleccione primero un grupo'
                     }
                     renderOption={(props, option) => (
                         <li {...props} key={option.contactemail1}>
@@ -389,15 +389,15 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Student Name"
+                            label="Nombre del alumno"
                             variant="outlined"
-                            placeholder={formData.grade ? 'Start typing to search students' : 'Select grade first'}
+                            placeholder={formData.grade ? 'Escriba para buscar alumnos' : 'Seleccione primero un grupo'}
                             error={!!errors.student || !!studentLoadError}
                             helperText={
                                 errors.student || studentLoadError ||
                                 (formData.grade
-                                    ? `Select a student from grade ${formData.grade}`
-                                    : 'Select a grade first to load students')
+                                    ? `Seleccione un alumno del grupo ${formData.grade}`
+                                    : 'Seleccione primero un grupo para cargar los alumnos')
                             }
                         />
                     )}
@@ -410,16 +410,16 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                   fullWidth
                   id="content"
                   name="content"
-                  label="Report Content"
+                  label="Contenido del reporte"
                   variant="outlined"
                   multiline
                   rows={6}
                   value={formData.content}
                   onChange={handleInputChange}
                   disabled={loading || success}
-                  placeholder="Enter the detailed content of the report..."
+                  placeholder="Ingrese el contenido detallado del reporte..."
                   error={!!errors.content}
-                  helperText={errors.content || 'Describe the observations or report details'}
+                  helperText={errors.content || 'Describa las observaciones o los detalles del reporte'}
                 />
               </Box>
 
@@ -431,7 +431,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                   disabled={loading || success}
                   sx={{ textTransform: 'none', px: 4, width: { xs: '100%', sm: 'auto' } }}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   type="submit"
@@ -440,7 +440,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
                   startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
                   sx={{ textTransform: 'none', px: 4, width: { xs: '100%', sm: 'auto' } }}
                 >
-                  {loading ? 'Creating...' : 'Create Report'}
+                  {loading ? 'Creando...' : 'Crear incidencia'}
                 </Button>
               </Box>
             </Box>
@@ -458,20 +458,20 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
           fullWidth
           aria-labelledby="confirm-report-title"
         >
-          <DialogTitle id="confirm-report-title">Review Report Details</DialogTitle>
+          <DialogTitle id="confirm-report-title">Revise los datos del reporte</DialogTitle>
           <DialogContent dividers>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              Please review the details before creating this report.
+              Revise los datos antes de crear este reporte.
             </Typography>
-            <Typography variant="subtitle2" color="text.secondary">Student</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Alumno</Typography>
             <Typography sx={{ mb: 2 }}>{formData.student}</Typography>
-            <Typography variant="subtitle2" color="text.secondary">Grade</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Grupo</Typography>
             <Typography sx={{ mb: 2 }}>{formData.grade}</Typography>
-            <Typography variant="subtitle2" color="text.secondary">Report Type</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Tipo de reporte</Typography>
             <Typography sx={{ mb: 2 }}>{formData.reportType}</Typography>
-            <Typography variant="subtitle2" color="text.secondary">Report Content</Typography>
+            <Typography variant="subtitle2" color="text.secondary">Contenido del reporte</Typography>
             <Typography sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-              {formData.content || 'No content provided'}
+              {formData.content || 'No se proporcionó contenido'}
             </Typography>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2 }}>
@@ -480,7 +480,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               disabled={loading}
               sx={{ textTransform: 'none' }}
             >
-              Go Back
+              Volver
             </Button>
             <Button
               onClick={handleConfirmCreate}
@@ -489,7 +489,7 @@ export default function CreateReportPage({ onBack, onSuccess }: CreateReportPage
               startIcon={loading ? <CircularProgress size={20} color="inherit" /> : undefined}
               sx={{ textTransform: 'none' }}
             >
-              {loading ? 'Creating...' : 'Confirm & Create'}
+              {loading ? 'Creando...' : 'Confirmar y crear'}
             </Button>
           </DialogActions>
         </Dialog>

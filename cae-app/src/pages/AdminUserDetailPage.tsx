@@ -67,13 +67,13 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
-          setError('Session expired or access denied. Please log in again.')
+          setError('La sesión venció o se denegó el acceso. Inicie sesión de nuevo.')
           handleLogout()
           return
         }
         setError(err.message)
       } else {
-        setError('Failed to load user details. Please try again.')
+        setError('No se pudieron cargar los datos del usuario. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -86,7 +86,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -126,7 +126,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
       <Box sx={{ py: { xs: 2, sm: 4 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, mb: 4 }}>
           <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
-            Back to Dashboard
+            Volver al panel
           </Button>
           <Button
             variant="outlined"
@@ -135,7 +135,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
             onClick={handleLogout}
             sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           >
-            Logout
+            Cerrar sesión
           </Button>
         </Box>
 
@@ -145,7 +145,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
             sx={{ mb: 3 }}
             action={
               <Button color="inherit" size="small" onClick={fetchAdminUserData}>
-                Retry
+                Reintentar
               </Button>
             }
           >
@@ -157,7 +157,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
           <Card sx={{ mb: 4, boxShadow: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
-                User Details
+                Datos del usuario
               </Typography>
               <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                 <Avatar sx={{ width: { xs: 60, sm: 72 }, height: { xs: 60, sm: 72 }, bgcolor: '#1976d2', fontSize: { xs: '1.4rem', sm: '1.8rem' } }}>
@@ -166,7 +166,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                 <Box sx={{ flex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1, mb: 1 }}>
                     <Typography variant="h6">{userInfo.fullName}</Typography>
-                    <Chip label={userInfo.role} size="small" color={getRoleColor(userInfo.role) as any} />
+                    <Chip label={userInfo.role === 'ADMIN' ? 'Admin' : userInfo.role === 'USER' ? 'Usuario' : userInfo.role} size="small" color={getRoleColor(userInfo.role) as any} />
                   </Box>
                   <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 3 }, flexWrap: 'wrap' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -179,7 +179,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <CalendarToday fontSize="small" />
-                      <Typography variant="body2">Joined {formatDate(userInfo.createdAt)}</Typography>
+                      <Typography variant="body2">Se unió el {formatDate(userInfo.createdAt)}</Typography>
                     </Box>
                   </Box>
                 </Box>
@@ -193,13 +193,13 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, flexWrap: 'wrap' }}>
               <Description color="primary" />
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                User Reports
+                Incidencias del usuario
               </Typography>
               <Chip label={reports.length} size="small" color="primary" />
             </Box>
 
             {reports.length === 0 ? (
-              <Alert severity="info">This user has not created any reports yet.</Alert>
+              <Alert severity="info">Este usuario todavía no ha creado incidencias.</Alert>
             ) : (
               <>
                 <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
@@ -229,11 +229,11 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1 }}>
                         <Typography variant="caption" color="text.secondary">
-                          Created {formatDate(report.createdAt)}
+                          Creado el {formatDate(report.createdAt)}
                         </Typography>
                       </Box>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                        Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                        Fecha de recepción: {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
                       </Typography>
                     </Paper>
                   ))}
@@ -243,11 +243,11 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                   <Table sx={{ minWidth: 820 }}>
                     <TableHead>
                       <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Grade</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Received Date</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Alumno</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Grupo</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Tipo</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>Creado</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Fecha de recepción</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>

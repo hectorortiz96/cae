@@ -51,7 +51,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
     try {
       // Validate inputs
       if (!formData.username || !formData.password) {
-        setError('Please fill in all fields')
+        setError('Complete todos los campos.')
         setLoading(false)
         return
       }
@@ -100,9 +100,9 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
       if (err instanceof ApiError) {
         setError(err.message)
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Connection failed. Ensure backend and frontend environment URLs are configured correctly.')
+        setError('No se pudo establecer la conexión. Verifique que las URL del entorno del servidor y del sitio estén configuradas correctamente.')
       } else {
-        setError('Unexpected error during login.')
+        setError('Ocurrió un error inesperado al iniciar sesión.')
       }
     } finally {
       setLoading(false)
@@ -134,15 +134,15 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
               <Box
                 component="img"
                 src={caeLogo}
-                alt="CAE logo"
+                alt="Logotipo de CAE"
                 sx={{ width: 224, height: 224, objectFit: 'contain', mb: 2 }}
               >
               </Box>
               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
-                Welcome Back
+                Bienvenido
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Sign in to your account
+                Inicie sesión en su cuenta
               </Typography>
             </Box>
 
@@ -160,7 +160,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                   fullWidth
                   id="username"
                   name="username"
-                  label="Username or email"
+                  label="Nombre de usuario o correo electrónico"
                   type="text"
                   variant="outlined"
                   value={formData.username}
@@ -179,7 +179,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                   fullWidth
                   id="password"
                   name="password"
-                  label="Password"
+                  label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
                   variant="outlined"
                   value={formData.password}
@@ -191,7 +191,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            aria-label="toggle password visibility"
+                            aria-label="Mostrar u ocultar contraseña"
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
                             disabled={loading}
@@ -216,7 +216,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                    }}
                    sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
                  >
-                   Forgot password?
+                   ¿Olvidó su contraseña?
                  </Link>
                </Box>
 
@@ -233,20 +233,20 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                   textTransform: 'none',
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Iniciar sesión'}
               </Button>
             </Box>
 
             {/* Footer */}
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Don't have an account?{' '}
+                ¿No tiene una cuenta?{' '}
                 <Box
                   component="span"
                   onClick={onSwitchToRegister}
                   sx={{ color: '#1976d2', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
                 >
-                  Sign up
+                  Regístrese
                 </Box>
               </Typography>
             </Box>
@@ -268,20 +268,20 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
           }}
         >
           <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-            API Endpoint: {import.meta.env.VITE_API_BASE_URL}
+            Punto de conexión de API: {import.meta.env.VITE_API_BASE_URL}
             {API_ROUTES.auth.login}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Backend must be running on port 8080
+            ✓ El servidor debe estar ejecutándose en el puerto 8080
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Open browser DevTools (F12) Console tab to see request logs
+            ✓ Abra la consola de herramientas del navegador (F12) para ver los registros de solicitudes
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Make sure you have registered an account first at /auth/signup
+            ✓ Primero debe registrar una cuenta en /auth/signup
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
-            Please check the console for detailed error messages if login fails.
+            Si no puede iniciar sesión, consulte la consola para ver los mensajes de error detallados.
           </Typography>
         </Box>
       </Box>

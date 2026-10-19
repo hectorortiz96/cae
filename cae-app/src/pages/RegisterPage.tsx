@@ -51,14 +51,14 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
     try {
       // Validate inputs
       if (!formData.username || !formData.password || !formData.email || !formData.fullName) {
-        setError('Please fill in all fields')
+        setError('Complete todos los campos.')
         setLoading(false)
         return
       }
 
       // Validate password length
       if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters')
+        setError('La contraseña debe tener al menos 6 caracteres.')
         setLoading(false)
         return
       }
@@ -66,13 +66,13 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
-        setError('Please enter a valid email address')
+        setError('Ingrese una dirección de correo electrónico válida.')
         setLoading(false)
         return
       }
 
       if (!formData.email.toLowerCase().endsWith('@cae.edu.mx')) {
-        setError('Email must use the @cae.edu.mx domain')
+        setError('El correo electrónico debe usar el dominio @cae.edu.mx.')
         setLoading(false)
         return
       }
@@ -92,9 +92,9 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
       if (err instanceof ApiError) {
         setError(err.message)
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Connection failed. Ensure backend and frontend environment URLs are configured correctly.')
+        setError('No se pudo establecer la conexión. Verifique que las URL del entorno del servidor y del sitio estén configuradas correctamente.')
       } else {
-        setError('Unexpected error during registration.')
+        setError('Ocurrió un error inesperado durante el registro.')
       }
     } finally {
       setLoading(false)
@@ -138,15 +138,15 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                 <ManageAccounts sx={{ color: 'white', fontSize: 28 }} />
               </Box>
               <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
-                Create Account
+                Crear cuenta
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Register for a new account
+                Regístrese para crear una cuenta nueva
               </Typography>
             </Box>
 
             <Alert severity="info" sx={{ mb: 3, borderRadius: 1 }}>
-              We recommend using the same email address and username as your education account.
+              Le recomendamos usar la misma dirección de correo electrónico y el mismo nombre de usuario que en su cuenta educativa.
             </Alert>
 
             {/* Error Alert */}
@@ -163,7 +163,7 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   fullWidth
                   id="username"
                   name="username"
-                  label="Username"
+                  label="Nombre de usuario"
                   type="text"
                   variant="outlined"
                   value={formData.username}
@@ -182,7 +182,7 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   fullWidth
                   id="fullName"
                   name="fullName"
-                  label="Full Name"
+                  label="Nombre completo"
                   type="text"
                   variant="outlined"
                   value={formData.fullName}
@@ -201,13 +201,13 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   fullWidth
                   id="email"
                   name="email"
-                  label="Email Address"
+                  label="Correo electrónico"
                   type="email"
                   variant="outlined"
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={loading}
-                  helperText="Use your @cae.edu.mx email address"
+                  helperText="Utilice su dirección de correo electrónico @cae.edu.mx"
                   slotProps={{
                     input: {
                       startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
@@ -221,20 +221,20 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   fullWidth
                   id="password"
                   name="password"
-                  label="Password"
+                  label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
                   variant="outlined"
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={loading}
-                  helperText="Minimum 6 characters"
+                  helperText="Mínimo 6 caracteres"
                   slotProps={{
                     input: {
                       startAdornment: <Lock sx={{ mr: 1, color: 'text.secondary' }} />,
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
-                            aria-label="toggle password visibility"
+                            aria-label="Mostrar u ocultar contraseña"
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
                             disabled={loading}
@@ -261,20 +261,20 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
                   textTransform: 'none',
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Crear cuenta'}
               </Button>
             </Box>
 
             {/* Footer */}
             <Box sx={{ mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Already have an account?{' '}
+                ¿Ya tiene una cuenta?{' '}
                 <Box
                   component="span"
                   onClick={onSwitchToLogin}
                   sx={{ color: '#1976d2', fontWeight: 600, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
                 >
-                  Sign in
+                  Inicie sesión
                 </Box>
               </Typography>
             </Box>
@@ -296,30 +296,29 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
           }}
         >
           <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-            API Endpoint: {import.meta.env.VITE_API_BASE_URL}
+            Punto de conexión de API: {import.meta.env.VITE_API_BASE_URL}
             {API_ROUTES.auth.signup}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Backend must be running on port 8080
+            ✓ El servidor debe estar ejecutándose en el puerto 8080
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Username must be 3-50 characters
+            ✓ El nombre de usuario debe tener entre 3 y 50 caracteres
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Password must be at least 6 characters
+            ✓ La contraseña debe tener al menos 6 caracteres
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Email must be unique
+            ✓ El correo electrónico debe ser único
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>
-            ✓ Email must use the @cae.edu.mx domain
+            ✓ El correo electrónico debe usar el dominio @cae.edu.mx
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
-            Please check the browser console (F12) for detailed error messages if registration fails.
+            Si el registro falla, consulte la consola del navegador (F12) para ver los mensajes de error detallados.
           </Typography>
         </Box>
       </Box>
     </Container>
   )
 }
-

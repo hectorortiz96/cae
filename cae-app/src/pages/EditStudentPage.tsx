@@ -37,7 +37,7 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
         }
       } catch (err) {
         if (active) {
-          setError(err instanceof ApiError ? err.message : 'Failed to load student. Please try again.')
+          setError(err instanceof ApiError ? err.message : 'No se pudo cargar el alumno. Inténtelo de nuevo.')
         }
       } finally {
         if (active) setLoading(false)
@@ -54,7 +54,7 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
     setError('')
     setSuccess(false)
     if (!student.fullName.trim() || !student.contactemail1.trim()) {
-      setError('Full name and primary contact email are required.')
+      setError('El nombre completo y el correo electrónico de contacto principal son obligatorios.')
       return
     }
     setSaving(true)
@@ -69,7 +69,7 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
       setSuccess(true)
       onSaved(result.fullName)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to save student. Please try again.')
+      setError(err instanceof ApiError ? err.message : 'No se pudo guardar el alumno. Inténtelo de nuevo.')
     } finally {
       setSaving(false)
     }
@@ -85,35 +85,35 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
     <Container maxWidth="sm">
       <Box sx={{ py: { xs: 2, sm: 4 } }}>
         <Button startIcon={<ArrowBack />} onClick={onBack} disabled={saving} sx={{ mb: 3, textTransform: 'none' }}>
-          Back to Search Reports
+          Volver a la búsqueda de incidencias
         </Button>
         <Card sx={{ boxShadow: 3 }}>
           <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>Edit Student</Typography>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', mb: 2 }}>Editar alumno</Typography>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }} action={!student && !loading ? (
-                <Button color="inherit" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Retry</Button>
+                <Button color="inherit" onClick={() => setLoadAttempt((attempt) => attempt + 1)}>Reintentar</Button>
               ) : undefined}>{error}</Alert>
             )}
-            {success && <Alert severity="success" sx={{ mb: 2 }}>Student updated successfully.</Alert>}
+            {success && <Alert severity="success" sx={{ mb: 2 }}>El alumno se actualizó correctamente.</Alert>}
             {loading && <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}><CircularProgress /></Box>}
             {student && !loading && (
               <Box component="form" onSubmit={handleSave} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField label="Full Name" required value={student.fullName} disabled={saving}
+                <TextField label="Nombre completo" required value={student.fullName} disabled={saving}
                   onChange={(event) => updateField('fullName', event.target.value)} slotProps={{ htmlInput: { maxLength: 150 } }} />
-                <TextField label="Grade" select required value={student.grade} disabled={saving}
+                <TextField label="Grupo" select required value={student.grade} disabled={saving}
                   onChange={(event) => updateField('grade', event.target.value)}>
                   {GRADES.map((grade) => <MenuItem key={grade} value={grade}>{grade}</MenuItem>)}
                 </TextField>
-                <TextField label="Primary Contact Email" type="email" required value={student.contactemail1} disabled={saving}
+                <TextField label="Correo electrónico de contacto principal" type="email" required value={student.contactemail1} disabled={saving}
                   onChange={(event) => updateField('contactemail1', event.target.value)} slotProps={{ htmlInput: { maxLength: 100 } }} />
-                <TextField label="Secondary Contact Email" type="email" value={student.contactemail2 ?? ''} disabled={saving}
+                <TextField label="Correo electrónico de contacto secundario" type="email" value={student.contactemail2 ?? ''} disabled={saving}
                   onChange={(event) => updateField('contactemail2', event.target.value)} slotProps={{ htmlInput: { maxLength: 100 } }} />
                 <Typography variant="body2" color="text.secondary">
-                  Name changes also update existing reports. Existing reports keep their original grade.
+                  Los cambios de nombre también se aplican a las incidencias existentes. Las incidencias existentes conservan su grupo original.
                 </Typography>
                 <Button type="submit" variant="contained" startIcon={saving ? <CircularProgress size={18} /> : <Save />} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? 'Guardando...' : 'Guardar cambios'}
                 </Button>
               </Box>
             )}

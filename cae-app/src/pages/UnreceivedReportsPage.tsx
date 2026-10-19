@@ -66,14 +66,14 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
 
         if (err instanceof ApiError) {
           if (err.status === 401 || err.status === 403) {
-            setError('Session expired. Please log in again.')
+            setError('La sesión venció. Inicie sesión de nuevo.')
             logout()
             onLogout()
             return
           }
           setError(err.message)
         } else {
-          setError('Failed to load unreceived reports. Please try again.')
+          setError('No se pudieron cargar las incidencias sin confirmar. Inténtelo de nuevo.')
         }
       } finally {
         if (isMounted) {
@@ -95,7 +95,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -117,7 +117,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
           }}
         >
           <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
-            Back to Dashboard
+            Volver al panel
           </Button>
           <Button
             variant="outlined"
@@ -126,7 +126,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
             onClick={handleLogout}
             sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           >
-            Logout
+            Cerrar sesión
           </Button>
         </Box>
 
@@ -135,18 +135,18 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <Description color="primary" />
               <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
-                Unreceived Reports
+                Incidencias sin confirmar
               </Typography>
             </Box>
 
             {loading ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
                 <CircularProgress size={16} />
-                <Typography variant="body2">Loading unreceived reports...</Typography>
+                <Typography variant="body2">Cargando incidencias sin confirmar...</Typography>
               </Box>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                {reports.length} report{reports.length === 1 ? '' : 's'} not received yet
+                {reports.length} {reports.length === 1 ? 'incidencia pendiente de recepción' : 'incidencias pendientes de recepción'}
               </Typography>
             )}
           </CardContent>
@@ -171,7 +171,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
         )}
 
         {!error && !loading && reports.length === 0 && (
-          <Alert severity="info">All reports have been received.</Alert>
+          <Alert severity="info">Se confirmó la recepción de todas las incidencias.</Alert>
         )}
 
         {!loading && reports.length > 0 && (
@@ -209,15 +209,15 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
                       size="small"
                       color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                     />
-                    <Chip label={`Author: ${report.authorFullName}`} size="small" />
+                    <Chip label={`Autor: ${report.authorFullName}`} size="small" />
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
-                    Created {formatDate(report.createdAt)}
+                    Creado el {formatDate(report.createdAt)}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
                     <Cancel color="error" fontSize="small" />
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.82rem' }}>
-                      Not Received
+                      No recibido
                     </Typography>
                   </Box>
                 </Paper>
@@ -228,12 +228,12 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
               <Table sx={{ minWidth: 680 }}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Student</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Author</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Grade</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Type</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }} align="center">Received</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Alumno</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Autor</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Grupo</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Tipo</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Creado</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }} align="center">Recibido</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -277,7 +277,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Tooltip title="Not Received">
+                        <Tooltip title="No recibido">
                           <Cancel color="error" />
                         </Tooltip>
                       </TableCell>

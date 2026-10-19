@@ -64,17 +64,17 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401) {
-          setError('Session expired. Please log in again.')
+          setError('La sesión venció. Inicie sesión de nuevo.')
           handleLogout()
           return
         }
         if (err.status === 404) {
-          setError('Report not found.')
+          setError('No se encontró el reporte.')
           return
         }
         setError(err.message)
       } else {
-        setError('Failed to load report details. Please try again.')
+        setError('No se pudieron cargar los datos del reporte. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -109,15 +109,15 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
           pdfMimeType: mimeType,
         }),
       })
-      setEmailMessage('Report email sent again.')
+      setEmailMessage('Se volvió a enviar el correo del reporte.')
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setEmailError('Session expired. Please log in again.')
+        setEmailError('La sesión venció. Inicie sesión de nuevo.')
         handleLogout()
       } else if (err instanceof ApiError) {
         setEmailError(err.message)
       } else {
-        setEmailError('Failed to resend report email. Please try again.')
+        setEmailError('No se pudo volver a enviar el correo del reporte. Inténtelo de nuevo.')
       }
     } finally {
       setSendingEmail(false)
@@ -125,7 +125,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    return new Date(dateString).toLocaleString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -144,10 +144,10 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
 
     try {
       await exportReportToPdf(report, {
-        title: `Report Details #${report.id}`,
+        title: `Detalles del reporte #${report.id}`,
       })
     } catch {
-      setExportError('Failed to export PDF. Please try again.')
+      setExportError('No se pudo exportar el PDF. Inténtelo de nuevo.')
     } finally {
       setExportingPdf(false)
     }
@@ -184,7 +184,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
           }}
         >
           <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
-            Back to Dashboard
+            Volver al panel
           </Button>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {canResendEmail && (
@@ -195,7 +195,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
                 disabled={sendingEmail}
                 sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
-                {sendingEmail ? 'Sending Email...' : 'Resend Email'}
+                {sendingEmail ? 'Enviando correo...' : 'Reenviar correo'}
               </Button>
             )}
             <Button
@@ -205,7 +205,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               disabled={!report || exportingPdf}
               sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
             >
-              {exportingPdf ? 'Exporting PDF...' : 'Export PDF'}
+              {exportingPdf ? 'Exportando PDF...' : 'Exportar PDF'}
             </Button>
             <Button
               variant="outlined"
@@ -214,7 +214,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               onClick={handleLogout}
               sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
             >
-              Logout
+              Cerrar sesión
             </Button>
           </Box>
         </Box>
@@ -242,7 +242,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
             severity="error"
             action={
               <Button color="inherit" size="small" onClick={fetchReportDetail}>
-                Retry
+                Reintentar
               </Button>
             }
             sx={{ mb: 3 }}
@@ -257,21 +257,21 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Description color="primary" />
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
-                  Report Details
+                  Detalles del reporte
                 </Typography>
               </Box>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
-                <Chip icon={<School />} label={`Grade ${report.grade}`} variant="outlined" />
+                <Chip icon={<School />} label={`Grupo ${report.grade}`} variant="outlined" />
                 <Chip icon={<DescriptionOutlined />} label={report.reportType} color={report.reportType === 'Reporte' ? 'error' : 'warning'} />
-                <Chip icon={<Person />} label={`Author: ${report.authorFullName}`} />
+                <Chip icon={<Person />} label={`Autor: ${report.authorFullName}`} />
                 <Chip
                   icon={<CalendarToday />}
-                  label={`Created: ${formatDate(report.createdAt)}`}
+                  label={`Creado: ${formatDate(report.createdAt)}`}
                   variant="outlined"
                 />
                 <Chip
-                    label={report.received ? 'Acknowledged as received' : 'Pending acknowledgment'}
+                    label={report.received ? 'Confirmado como recibido' : 'Pendiente de confirmación'}
                     color={report.received ? 'success' : 'error'}
                     variant={report.received ? 'filled' : 'outlined'}
                 />
@@ -281,14 +281,14 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
               <Divider sx={{ mb: 3 }} />
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                Student
+                Alumno
               </Typography>
               <Typography variant="body1" sx={{ mb: 3 }}>
                 {report.student}
               </Typography>
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                Report Content
+                Contenido del reporte
               </Typography>
               <Typography
                 variant="body1"
@@ -298,7 +298,7 @@ export default function ReportDetailPage({ reportId, onBack, onLogout }: ReportD
                   color: 'text.primary',
                 }}
               >
-                {report.content || 'No content provided.'}
+                {report.content || 'No se proporcionó contenido.'}
               </Typography>
             </CardContent>
           </Card>

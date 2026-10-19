@@ -57,12 +57,12 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 404) {
-          setError('Report not found.')
+          setError('No se encontró el reporte.')
           return
         }
         setError(err.message)
       } else {
-        setError('Failed to load report details. Please try again.')
+        setError('No se pudieron cargar los datos del reporte. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -87,7 +87,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
       if (err instanceof ApiError) {
         setReceivedError(err.message)
       } else {
-        setReceivedError('Failed to confirm report receipt. Please try again.')
+        setReceivedError('No se pudo confirmar la recepción del reporte. Inténtelo de nuevo.')
       }
     } finally {
       setConfirmingReceived(false)
@@ -95,7 +95,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    return new Date(dateString).toLocaleString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -115,7 +115,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
     try {
       await exportReportToPdf(report)
     } catch {
-      setExportError('Failed to export PDF. Please try again.')
+      setExportError('No se pudo exportar el PDF. Inténtelo de nuevo.')
     } finally {
       setExportingPdf(false)
     }
@@ -147,7 +147,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
             severity="error"
             action={
               <Button color="inherit" size="small" onClick={fetchReportDetail}>
-                Retry
+                Reintentar
               </Button>
             }
             sx={{ mb: 3 }}
@@ -174,25 +174,25 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <Description color="primary" />
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
-                  Report Details
+                  Detalles del reporte
                 </Typography>
               </Box>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, mb: 3 }}>
-                <Chip icon={<School />} label={`Grade ${report.grade}`} variant="outlined" />
+                <Chip icon={<School />} label={`Grupo ${report.grade}`} variant="outlined" />
                 <Chip
                   icon={<DescriptionOutlined />}
                   label={report.reportType}
                   color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                 />
-                <Chip icon={<Person />} label={`Author: ${report.authorFullName}`} />
+                <Chip icon={<Person />} label={`Autor: ${report.authorFullName}`} />
                 <Chip
                   icon={<CalendarToday />}
-                  label={`Created: ${formatDate(report.createdAt)}`}
+                  label={`Creado: ${formatDate(report.createdAt)}`}
                   variant="outlined"
                 />
                 <Chip
-                  label={report.received ? 'Acknowledged as received' : 'Pending acknowledgment'}
+                  label={report.received ? 'Confirmado como recibido' : 'Pendiente de confirmación'}
                   color={report.received ? 'success' : 'default'}
                   variant={report.received ? 'filled' : 'outlined'}
                 />
@@ -208,7 +208,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
                     disabled={report.received || confirmingReceived}
                   />
                 }
-                label="I acknowledge that this report was received"
+                label="Confirmo que recibí este reporte"
                 sx={{ mb: 1 }}
               />
 
@@ -218,7 +218,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
                 disabled={report.received || !receivedChecked || confirmingReceived}
                 sx={{ textTransform: 'none', mb: 3, width: { xs: '100%', sm: 'auto' } }}
               >
-                {report.received ? 'Receipt Confirmed' : confirmingReceived ? 'Confirming...' : 'Confirm Receipt'}
+                {report.received ? 'Recepción confirmada' : confirmingReceived ? 'Confirmando...' : 'Confirmar recepción'}
               </Button>
 
               <Divider sx={{ mb: 3 }} />
@@ -230,20 +230,20 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
                 disabled={exportingPdf}
                 sx={{ textTransform: 'none', mb: 3, width: { xs: '100%', sm: 'auto' } }}
               >
-                {exportingPdf ? 'Exporting PDF...' : 'Export PDF'}
+                {exportingPdf ? 'Exportando PDF...' : 'Exportar PDF'}
               </Button>
 
               <Divider sx={{ mb: 3 }} />
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                Student
+                Alumno
               </Typography>
               <Typography variant="body1" sx={{ mb: 3 }}>
                 {report.student}
               </Typography>
 
               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                Report Content
+                Contenido del reporte
               </Typography>
               <Typography
                 variant="body1"
@@ -253,7 +253,7 @@ export default function PublicReportDetailPage({ reportId}: PublicReportDetailPa
                   color: 'text.primary',
                 }}
               >
-                {report.content || 'No content provided.'}
+                {report.content || 'No se proporcionó contenido.'}
               </Typography>
             </CardContent>
           </Card>

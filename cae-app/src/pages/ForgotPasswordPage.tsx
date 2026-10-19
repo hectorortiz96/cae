@@ -31,7 +31,7 @@ export default function ForgotPasswordPage() {
       // Validate email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email)) {
-        setError('Please enter a valid email address')
+        setError('Ingrese una dirección de correo electrónico válida.')
         setLoading(false)
         return
       }
@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       })
 
-      setSuccess('Password reset email sent! Check your inbox for instructions.')
+      setSuccess('Se envió el correo para restablecer la contraseña. Revise su bandeja de entrada para ver las instrucciones.')
       setEmail('')
 
       // Redirect to login after 2 seconds
@@ -52,9 +52,9 @@ export default function ForgotPasswordPage() {
       if (err instanceof ApiError) {
         setError(err.message)
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Connection failed. Please check your internet connection.')
+        setError('No se pudo establecer la conexión. Revise su conexión a internet.')
       } else {
-        setError('An error occurred. Please try again.')
+        setError('Ocurrió un error. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             <ArrowBack sx={{ fontSize: 18 }} />
-            Back to Login
+            Volver al inicio de sesión
           </Link>
         </Box>
 
@@ -96,10 +96,10 @@ export default function ForgotPasswordPage() {
               mb: 1,
             }}
           >
-            Forgot Your Password?
+            ¿Olvidó su contraseña?
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Enter your email address and we'll send you a link to reset your password.
+            Ingrese su dirección de correo electrónico y le enviaremos un enlace para restablecer su contraseña.
           </Typography>
         </Box>
 
@@ -124,13 +124,13 @@ export default function ForgotPasswordPage() {
               fullWidth
               id="email"
               name="email"
-              label="Email Address"
+              label="Correo electrónico"
               type="email"
               variant="outlined"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
-              placeholder="Enter your email"
+              placeholder="Ingrese su correo electrónico"
             />
           </Box>
 
@@ -151,7 +151,7 @@ export default function ForgotPasswordPage() {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              'Send Reset Link'
+              'Enviar enlace de restablecimiento'
             )}
           </Button>
         </Box>
@@ -159,4 +159,3 @@ export default function ForgotPasswordPage() {
     </Container>
   )
 }
-

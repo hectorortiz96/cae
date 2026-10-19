@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
     // Extract token from URL
     const token = searchParams.get('token')
     if (!token) {
-      setError('Invalid reset link. No token provided.')
+      setError('El enlace para restablecer la contraseña no es válido. No se proporcionó ningún token.')
       return
     }
     setFormData((prev) => ({
@@ -60,21 +60,21 @@ export default function ResetPasswordPage() {
     try {
       // Validate inputs
       if (!formData.password || !formData.passwordConfirm) {
-        setError('Please fill in all fields')
+        setError('Complete todos los campos.')
         setLoading(false)
         return
       }
 
       // Validate password length
       if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters')
+        setError('La contraseña debe tener al menos 6 caracteres.')
         setLoading(false)
         return
       }
 
       // Validate passwords match
       if (formData.password !== formData.passwordConfirm) {
-        setError('Passwords do not match')
+        setError('Las contraseñas no coinciden.')
         setLoading(false)
         return
       }
@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
         }),
       })
 
-      setSuccess('Password reset successfully! Redirecting to login...')
+      setSuccess('La contraseña se restableció correctamente. Redirigiendo al inicio de sesión...')
       setFormData({
         token: formData.token,
         password: '',
@@ -103,9 +103,9 @@ export default function ResetPasswordPage() {
       if (err instanceof ApiError) {
         setError(err.message)
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
-        setError('Connection failed. Please check your internet connection.')
+        setError('No se pudo establecer la conexión. Revise su conexión a internet.')
       } else {
-        setError('An error occurred. Please try again.')
+        setError('Ocurrió un error. Inténtelo de nuevo.')
       }
     } finally {
       setLoading(false)
@@ -134,10 +134,10 @@ export default function ResetPasswordPage() {
               mb: 1,
             }}
           >
-            Reset Your Password
+            Restablezca su contraseña
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Enter your new password below
+            Ingrese su nueva contraseña a continuación
           </Typography>
         </Box>
 
@@ -164,7 +164,7 @@ export default function ResetPasswordPage() {
                 fullWidth
                 id="password"
                 name="password"
-                label="New Password"
+                label="Nueva contraseña"
                 type={showPassword ? 'text' : 'password'}
                 variant="outlined"
                 value={formData.password}
@@ -175,6 +175,7 @@ export default function ResetPasswordPage() {
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label="Mostrar u ocultar contraseña"
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                           disabled={loading}
@@ -194,7 +195,7 @@ export default function ResetPasswordPage() {
                 fullWidth
                 id="passwordConfirm"
                 name="passwordConfirm"
-                label="Confirm Password"
+                label="Confirme la contraseña"
                 type={showPasswordConfirm ? 'text' : 'password'}
                 variant="outlined"
                 value={formData.passwordConfirm}
@@ -205,6 +206,7 @@ export default function ResetPasswordPage() {
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
+                          aria-label="Mostrar u ocultar confirmación de contraseña"
                           onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
                           edge="end"
                           disabled={loading}
@@ -235,7 +237,7 @@ export default function ResetPasswordPage() {
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                'Reset Password'
+                'Restablecer contraseña'
               )}
             </Button>
           </Box>
@@ -244,4 +246,3 @@ export default function ResetPasswordPage() {
     </Container>
   )
 }
-

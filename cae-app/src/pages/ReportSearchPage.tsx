@@ -59,7 +59,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -86,18 +86,18 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
 
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
-          setError('Session expired. Please log in again.')
+          setError('La sesión venció. Inicie sesión de nuevo.')
           logout()
           onLogout()
           return
         }
         if (err.status === 400) {
-          setError('Please enter a valid student name.')
+          setError('Ingrese un nombre de alumno válido.')
         } else {
           setError(err.message)
         }
       } else {
-        setError('Failed to search reports. Please try again.')
+        setError('No se pudieron buscar las incidencias. Inténtelo de nuevo.')
       }
 
       setReports([])
@@ -170,7 +170,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
           }}
         >
           <Button startIcon={<ArrowBack />} onClick={onBack} sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}>
-            Back to Dashboard
+            Volver al panel
           </Button>
           <Button
             variant="outlined"
@@ -179,7 +179,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
             onClick={handleLogout}
             sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
           >
-            Logout
+            Cerrar sesión
           </Button>
         </Box>
 
@@ -189,31 +189,31 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
 
               <Description color="primary" />
               <Typography variant="h5" component="h1" sx={{ fontWeight: 'bold', fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>
-                Search Reports by Student
+                Buscar incidencias por alumno
               </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
               <TextField
                 fullWidth
-                label="Student Name"
-                placeholder="Type full or partial name"
+                label="Nombre del alumno"
+                placeholder="Escriba el nombre completo o una parte"
                 value={studentName}
                 onChange={(event) => handleStudentNameChange(event.target.value)}
-                helperText={studentName.trim() ? 'Searching all reports automatically as you type.' : 'Start typing a student name to search all reports.'}
+                helperText={studentName.trim() ? 'Buscando automáticamente todas las incidencias mientras escribe.' : 'Empiece a escribir el nombre de un alumno para buscar en todas las incidencias.'}
               />
             </Box>
 
             {loading && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, color: 'text.secondary' }}>
                 <CircularProgress size={16} />
-                <Typography variant="body2">Searching for "{studentName.trim()}"...</Typography>
+                <Typography variant="body2">Buscando "{studentName.trim()}"...</Typography>
               </Box>
             )}
 
             {searchedName && !error && !loading && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                {reports.length} result{reports.length === 1 ? '' : 's'} across all reports for "{searchedName}"
+                {reports.length} {reports.length === 1 ? 'resultado' : 'resultados'} en todas las incidencias para "{searchedName}"
               </Typography>
             )}
           </CardContent>
@@ -238,7 +238,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
         )}
 
         {!error && hasSearched && searchedName && reports.length === 0 && !loading && (
-          <Alert severity="info">No reports found for "{searchedName}".</Alert>
+          <Alert severity="info">No se encontraron incidencias para "{searchedName}".</Alert>
         )}
 
         {reports.length > 0 && (
@@ -268,10 +268,10 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                     {admin && (
-                      <Tooltip title="Edit Student">
+                      <Tooltip title="Editar alumno">
                         <IconButton
                           size="small"
-                          aria-label={`Edit student ${report.student}`}
+                          aria-label={`Editar alumno ${report.student}`}
                           onClick={(event) => {
                             event.stopPropagation()
                             onEditStudent(report.student)
@@ -293,18 +293,18 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                       size="small"
                       color={report.reportType === 'Reporte' ? 'error' : 'warning'}
                     />
-                    <Chip label={`Author: ${report.authorFullName}`} size="small" />
+                    <Chip label={`Autor: ${report.authorFullName}`} size="small" />
                   </Box>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
-                    Created {formatDate(report.createdAt)}
+                    Creado el {formatDate(report.createdAt)}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, fontSize: '0.82rem' }}>
-                    Received date {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
+                    Fecha de recepción: {report.reportReceivedDate ? formatDate(report.reportReceivedDate) : '—'}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
                     {report.received ? <CheckCircle color="success" fontSize="small" /> : <Cancel color="error" fontSize="small" />}
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.82rem' }}>
-                      {report.received ? 'Received' : 'Not Received'}
+                      {report.received ? 'Recibido' : 'No recibido'}
                     </Typography>
                   </Box>
                 </Paper>
@@ -315,13 +315,13 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
               <Table sx={{ minWidth: 1040, tableLayout: 'fixed' }}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '22%' }}>Student</TableCell>
-                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '20%' }}>Author</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '10%' }}>Grade</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '11%' }}>Type</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '13%' }}>Created</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '15%' }}>Received Date</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '9%' }} align="center">Received</TableCell>
+                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '22%' }}>Alumno</TableCell>
+                    <TableCell sx={{ ...tableTextCellSx, fontWeight: 'bold', width: '20%' }}>Autor</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '10%' }}>Grupo</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '11%' }}>Tipo</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '13%' }}>Creado</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '15%' }}>Fecha de recepción</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '9%' }} align="center">Recibido</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -350,10 +350,10 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                       <TableCell sx={{ ...tableTextCellSx, width: '22%' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                           {admin && (
-                            <Tooltip title="Edit Student">
+                            <Tooltip title="Editar alumno">
                               <IconButton
                                 size="small"
-                                aria-label={`Edit student ${report.student}`}
+                                aria-label={`Editar alumno ${report.student}`}
                                 onClick={(event) => {
                                   event.stopPropagation()
                                   onEditStudent(report.student)
@@ -397,7 +397,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                         </Typography>
                       </TableCell>
                       <TableCell align="center" sx={{ width: '9%' }}>
-                        <Tooltip title={report.received ? 'Received' : 'Not Received'}>
+                        <Tooltip title={report.received ? 'Recibido' : 'No recibido'}>
                           {report.received ? <CheckCircle color="success" /> : <Cancel color="error" />}
                         </Tooltip>
                       </TableCell>
