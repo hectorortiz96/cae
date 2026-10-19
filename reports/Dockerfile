@@ -39,10 +39,8 @@ WORKDIR /app
 # /app/app.jar = destination (rename to app.jar for clarity)
 COPY --from=build /workspace/target/reports-*.jar /app/app.jar
 
-# Document that the container listens on port 8080
-# Doesn't actually expose it; docker-compose.yml does that
+# Cloud Run provides PORT at runtime; default to 8080 for local Docker runs.
+ENV PORT=8080
 EXPOSE 8080
-# Run this command when the container starts
-# Launches the Spring Boot application from the JAR
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-
+# Pass Cloud Run's port to Spring Boot and replace the shell with the application.
+ENTRYPOINT ["sh", "-c", "exec java -Dserver.port=${PORT:-8080} -jar /app/app.jar"]
