@@ -1,6 +1,7 @@
 package com.cae.reports.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.URI;
 import java.util.List;
 
 //Request Flow Summary:
@@ -42,13 +44,22 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     // Validates JWT tokens
     private final JwtAuthFilter jwtAuthFilter;
+    private final String publicReportOrigin;
 
     public SecurityConfig(
             AuthenticationProvider authenticationProvider,
-            JwtAuthFilter jwtAuthFilter
+            JwtAuthFilter jwtAuthFilter,
+            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl
     ) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthFilter = jwtAuthFilter;
+        URI publicReportUri = URI.create(publicReportBaseUrl);
+        if (publicReportUri.getScheme() == null
+                || (!publicReportUri.getScheme().equals("http") && !publicReportUri.getScheme().equals("https"))
+                || publicReportUri.getRawAuthority() == null) {
+            throw new IllegalArgumentException("app.public-report.base-url must be an absolute HTTP(S) URL");
+        }
+        this.publicReportOrigin = publicReportUri.getScheme() + "://" + publicReportUri.getRawAuthority();
     }
 
     // Configures security for the application
@@ -134,7 +145,8 @@ public class SecurityConfig {
         //Allow frontend origins (supports both development and production)
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",  // Vite default dev server
-                "http://localhost:8005"   // Alternative frontend port
+                "http://localhost:8005",  // Alternative frontend port
+                publicReportOrigin
         ));
         //Only these HTTP methods allowed
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
