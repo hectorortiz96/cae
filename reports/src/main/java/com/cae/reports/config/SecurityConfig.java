@@ -24,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Stream;
 
 //Request Flow Summary:
 // Client Request
@@ -44,12 +45,13 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     // Validates JWT tokens
     private final JwtAuthFilter jwtAuthFilter;
-    private final String publicReportOrigin;
+    private final List<String> corsAllowedOrigins;
 
     public SecurityConfig(
             AuthenticationProvider authenticationProvider,
             JwtAuthFilter jwtAuthFilter,
-            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl
+            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl,
+            @Value("${app.cors.allowed-origins:}") String corsAllowedOrigins
     ) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthFilter = jwtAuthFilter;
@@ -59,7 +61,13 @@ public class SecurityConfig {
                 || publicReportUri.getRawAuthority() == null) {
             throw new IllegalArgumentException("app.public-report.base-url must be an absolute HTTP(S) URL");
         }
-        this.publicReportOrigin = publicReportUri.getScheme() + "://" + publicReportUri.getRawAuthority();
+        this.corsAllowedOrigins = corsAllowedOrigins.isBlank()
+                ? List.of()
+                : corsAllowedOrigins.lines()
+                        .flatMap(line -> Stream.of(line.split(",")))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toList();
     }
 
     // Configures security for the application
@@ -143,11 +151,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         //Allow frontend origins (supports both development and production)
-        configuration.setAllowedOrigins(List.of(
+        configuration.setAllowedOrigins(Stream.concat(Stream.of(
                 "http://localhost:5173",  // Vite default dev server
-                "http://localhost:8005",  // Alternative frontend port
-                publicReportOrigin
-        ));
+                "http://localhost:8005"   // Alternative frontend port
+        ), corsAllowedOrigins.stream()).toList());
         //Only these HTTP methods allowed
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         //Only these headers allowed

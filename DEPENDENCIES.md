@@ -144,6 +144,7 @@ The backend can use Cloud SQL on Cloud Run while local development continues to 
    | `SPRING_DATASOURCE_URL` | `jdbc:mysql:///cae-reports?cloudSqlInstance=reportes-cae:northamerica-south1:cae-reports&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=UTC` |
    | `SPRING_DATASOURCE_USERNAME` | `cae_admin` |
    | `SPRING_DATASOURCE_PASSWORD` | Store as a Secret Manager secret and map it to this variable |
+   | `APP_CORS_ALLOWED_ORIGINS` | `https://cae-reports-front-376643686478.northamerica-south1.run.app,https://caereportes.cloud.run` |
 
    Do not use `mysql` as the host in this URL: Cloud Run connects through the Cloud SQL connector, not the local Compose network.
 
