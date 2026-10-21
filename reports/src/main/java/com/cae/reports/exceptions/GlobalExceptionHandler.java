@@ -14,13 +14,18 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.AccessDeniedException;
 import java.security.SignatureException;
 
+// Global exception handler for the application.
+// Handles various exceptions thrown during request processing and returns appropriate HTTP responses with detailed error information.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Handles exceptions that already carry an HTTP status, such as a 404 or 409.
     @ExceptionHandler(ResponseStatusException.class)
     public ProblemDetail handleResponseStatusException(ResponseStatusException exception) {
         return ProblemDetail.forStatusAndDetail(exception.getStatusCode(), exception.getReason());
     }
 
+    // Handles validation errors, returning a 400 Bad Request with the first validation error message.
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidationException(MethodArgumentNotValidException exception) {
         String detail = exception.getBindingResult().getFieldErrors().stream()
@@ -31,7 +36,9 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
-    @ExceptionHandler(Exception.class)public ProblemDetail handleSecurityException(Exception exception) {
+    // Handles security-related exceptions, returning appropriate HTTP status codes and messages.
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleSecurityException(Exception exception) {
         ProblemDetail errorDetail = null;
 
         // TODO send this stack trace to an observability tool
