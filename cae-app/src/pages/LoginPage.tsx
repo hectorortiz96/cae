@@ -142,7 +142,14 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
                 sx={{ width: 224, height: 224, objectFit: 'contain', mb: 2 }}
               >
               </Box>
-              <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, fontSize: { xs: '1.7rem', sm: '2.125rem' } }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={{
+                  mb: 1,
+                  fontSize: { xs: '1.7rem', sm: '2.125rem' },
+                }}
+              >
                 Bienvenido
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>

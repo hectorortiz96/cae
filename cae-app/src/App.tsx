@@ -35,17 +35,13 @@ const RouteFallback = () => {
 }
 
 const theme = createTheme({
-  palette: {
-    text: {
-      secondary: '#555',
-    },
-  },
   typography: {
-    fontFamily: 'system-ui, "Segoe UI", Roboto, Arial, sans-serif',
-    fontWeightRegular: 500,
-    fontWeightMedium: 600,
-    body1: { fontWeight: 500 },
-    body2: { fontWeight: 500 },
+    h1: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
+    h2: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
+    h3: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
+    h4: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
+    h5: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
+    h6: { fontFamily: 'Arial, Helvetica, sans-serif', fontWeight: 700, color: '#08060d' },
   },
 })
 
