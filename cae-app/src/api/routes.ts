@@ -7,11 +7,14 @@ export const API_ROUTES = {
   },
   users: {
     me: '/users/me',
+    updateMe: '/users/me',
   },
   admin: {
     users: '/admin/users',
+    deleteReportsBefore: (before: string) => `/admin/reports?before=${encodeURIComponent(before)}`,
     userById: (id: number) => `/admin/users/${id}`,
     userReports: (id: number) => `/admin/users/${id}/reports`,
+    updateStudent: (contactemail1: string) => `/admin/students?contactemail1=${encodeURIComponent(contactemail1)}`,
   },
   reports: {
     base: '/reports',
@@ -28,7 +31,6 @@ export const API_ROUTES = {
   students: {
     base: '/students',
     details: (fullName: string) => `/students/details?fullName=${encodeURIComponent(fullName)}`,
-    update: (contactemail1: string) => `/students/details?contactemail1=${encodeURIComponent(contactemail1)}`,
     import: '/students/import',
     byGrade: (grade: string) => `/students/grade/${grade}`,
     byName: (name: string) => `/students/name/${name}`,

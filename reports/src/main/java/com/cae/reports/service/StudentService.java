@@ -1,8 +1,6 @@
 package com.cae.reports.service;
 
 import com.cae.reports.dto.request.UpdateStudentRequest;
-import com.cae.reports.model.Report;
-import com.cae.reports.repository.ReportRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import com.cae.reports.dto.response.StudentBatchImportResponse;
@@ -32,11 +30,9 @@ import java.util.Set;
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
-    private final ReportRepository reportRepository;
 
-    public StudentService(StudentRepository studentRepository, ReportRepository reportRepository) {
+    public StudentService(StudentRepository studentRepository) {
         this.studentRepository = studentRepository;
-        this.reportRepository = reportRepository;
     }
 
     public Student getStudentByFullName(String fullName) {
@@ -57,12 +53,6 @@ public class StudentService {
         }
         if (studentRepository.existsByContactemail1IgnoreCaseAndContactemail1Not(request.contactemail1(), contactemail1)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "A student with this primary contact email already exists");
-        }
-
-        if (!student.getFullName().equals(request.fullName())) {
-            List<Report> reports = reportRepository.findByStudentIgnoreCase(student.getFullName());
-            reports.forEach(report -> report.setStudent(request.fullName()));
-            reportRepository.saveAll(reports);
         }
 
         Grade grade = Grade.fromValue(request.grade());

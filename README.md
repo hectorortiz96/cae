@@ -4,20 +4,33 @@
 
 Admins can select **Edit Student** on a result in **Search Reports by Student**
 (including the mobile card view) to update the student's full name, grade, and
-contact emails. Renaming a student updates matching existing reports; their
-original grades remain unchanged.
+contact emails. Student changes do not rewrite existing reports, so reports
+retain the student name and grade recorded when they were created.
 
 Both endpoints require the `ADMIN` role:
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | GET | `/students/details?fullName=<encoded name>` | Load a student by exact name, case-insensitively |
-| PUT | `/students/details?contactemail1=<encoded original email>` | Update the student identified by their original primary contact email |
+| PUT | `/admin/students?contactemail1=<encoded original email>` | Update the student identified by their original primary contact email |
 
 The PUT body contains `fullName`, `grade` (`1A` through `3C`), `contactemail1`,
 and optional `contactemail2`. Blank secondary emails are cleared. Invalid input
 returns `400`, missing students return `404`, and conflicting names or primary
 emails return `409`.
+
+## Updating your profile
+
+Authenticated users can edit their own username and full name from the dashboard.
+`PUT /users/me` accepts `username` (3-50 characters) and `fullName` (up to 150
+characters). A successful update returns the updated user and a refreshed JWT;
+duplicate usernames return `409`.
+
+## Paginated lists
+
+Dashboard reports and users, student report search results, unreceived reports,
+and reports shown on an admin user detail page are paginated on both desktop
+and mobile layouts.
 
 ## Testing Quick Start
 
@@ -77,7 +90,17 @@ MailHog is included so email flows can be tested locally without a real SMTP pro
 - App mail port: `1025`
 - MailHog web UI: http://localhost:8025
 
-When the app sends password reset or report emails, they will appear in the MailHog dashboard.
+With the local `dev` profile, mail is disabled by default. Set `APP_MAIL_ENABLED=true`
+to log email previews (recipients, CC, subject, body, and attachment filename) in the
+backend logs without sending via SMTP. This applies to reports, reminders, and
+password resets. When disabled, no email preview is logged.
+
+To explicitly test SMTP delivery through MailHog, enable mail and override
+`app.mail.log-only=false` (for example, the application argument
+`--app.mail.log-only=false`). Emails will then
+appear in the MailHog dashboard. Production sends enabled emails normally.
+Local previews can contain personal information and password-reset links; keep
+these logs private.
 
 ### Stop the stack
 

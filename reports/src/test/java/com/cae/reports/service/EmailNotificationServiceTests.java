@@ -1,10 +1,12 @@
 package com.cae.reports.service;
 
+import com.cae.reports.model.Advisor;
 import com.cae.reports.model.Grade;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.ReportType;
 import com.cae.reports.model.Student;
 import com.cae.reports.model.User;
+import com.cae.reports.repository.AdvisorRepository;
 import com.cae.reports.repository.StudentRepository;
 import jakarta.mail.Address;
 import jakarta.mail.BodyPart;
@@ -12,28 +14,39 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class EmailNotificationServiceTests {
+    private final AdvisorRepository advisorRepository = mock(AdvisorRepository.class);
 
     @Test
     void notifyReportCreatedSendsEmailToStudentContacts() throws Exception {
@@ -42,9 +55,10 @@ class EmailNotificationServiceTests {
         EmailNotificationService emailNotificationService = new EmailNotificationService(
                 mailSender,
                 studentRepository,
+                advisorRepository,
                 "noreply@test.local",
                 true,
-                "http://localhost:5173"
+                "http://localhost:5173", false
         );
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
@@ -105,9 +119,10 @@ class EmailNotificationServiceTests {
         EmailNotificationService emailNotificationService = new EmailNotificationService(
                 mailSender,
                 studentRepository,
+                advisorRepository,
                 "noreply@test.local",
                 true,
-                "http://localhost:5173"
+                "http://localhost:5173", false
         );
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
@@ -155,11 +170,56 @@ class EmailNotificationServiceTests {
     }
 
     @Test
+    void resendReportEmailWarnsWhenStudentWasDeleted() {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
+        );
+        Report report = new Report();
+        report.setStudent("Jane Doe");
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.resendReportEmail(report, null, null, null)
+        );
+
+        assertEquals(409, exception.getStatusCode().value());
+        assertTrue(exception.getReason().contains("el alumno ya no está registrado"));
+        assertTrue(exception.getReason().contains("no hay datos de contacto disponibles"));
+        verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+    }
+
+    @Test
+    void resendReportEmailWarnsWhenStudentHasNoContactEmails() {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
+        );
+        Report report = new Report();
+        report.setStudent("Jane Doe");
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(
+                Optional.of(new Student("Jane Doe", Grade.GRADE_2A, " ", " "))
+        );
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.resendReportEmail(report, null, null, null)
+        );
+
+        assertEquals(409, exception.getStatusCode().value());
+        assertTrue(exception.getReason().contains("no tiene correos de contacto registrados"));
+        verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+    }
+
+    @Test
     void reportEmailPreservesPlaceholderSyntaxInReportValues() throws Exception {
         JavaMailSender mailSender = mock(JavaMailSender.class);
         StudentRepository studentRepository = mock(StudentRepository.class);
         EmailNotificationService emailNotificationService = new EmailNotificationService(
-                mailSender, studentRepository, "noreply@test.local", true, "http://localhost:5173/"
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173/", false
         );
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
@@ -192,7 +252,7 @@ class EmailNotificationServiceTests {
         JavaMailSender mailSender = mock(JavaMailSender.class);
         StudentRepository studentRepository = mock(StudentRepository.class);
         EmailNotificationService service = new EmailNotificationService(
-                mailSender, studentRepository, "noreply@test.local", true, "http://localhost:5173"
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
         );
         MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSender.createMimeMessage()).thenReturn(message);
@@ -222,9 +282,10 @@ class EmailNotificationServiceTests {
         EmailNotificationService emailNotificationService = new EmailNotificationService(
                 mailSender,
                 studentRepository,
+                advisorRepository,
                 "noreply@test.local",
                 true,
-                "http://localhost:5173"
+                "http://localhost:5173", false
         );
 
         Report report = new Report();
@@ -248,9 +309,10 @@ class EmailNotificationServiceTests {
         EmailNotificationService emailNotificationService = new EmailNotificationService(
                 mailSender,
                 studentRepository,
+                advisorRepository,
                 "noreply@test.local",
                 false,
-                "http://localhost:5173"
+                "http://localhost:5173", false
         );
 
         Report report = new Report();
@@ -263,6 +325,166 @@ class EmailNotificationServiceTests {
 
         verify(studentRepository, never()).findByFullNameIgnoreCase(org.mockito.ArgumentMatchers.anyString());
         verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+    }
+
+    @ParameterizedTest
+    @EnumSource(Grade.class)
+    void reportEmailCopiesAdvisorsMatchingStudentGrade(Grade grade) throws Exception {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
+        );
+        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(message);
+        Student student = new Student("Jane Doe", grade, "family@test.local", null);
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(Optional.of(student));
+        int numericGrade = Integer.parseInt(grade.getValue().substring(0, 1));
+        when(advisorRepository.findByGrade(numericGrade)).thenReturn(List.of(
+                new Advisor("Advisor", " advisor@test.local ", numericGrade),
+                new Advisor("Second advisor", "second@test.local", numericGrade),
+                new Advisor("Author advisor", "teacher@test.local", numericGrade)
+        ));
+
+        Report report = new Report();
+        report.setStudent("Jane Doe");
+        report.setGrade(Grade.GRADE_1A);
+        report.setReportType(ReportType.REPORT);
+        User author = new User();
+        author.setEmail("teacher@test.local");
+        report.setUser(author);
+
+        service.notifyReportCreated(report, null, null, null);
+
+        verify(advisorRepository).findByGrade(numericGrade);
+        verify(mailSender).send(message);
+        assertArrayEquals(
+                new String[]{"teacher@test.local", "advisor@test.local", "second@test.local"},
+                Arrays.stream(message.getRecipients(MimeMessage.RecipientType.CC)).map(Address::toString).toArray(String[]::new)
+        );
+    }
+
+    @Test
+    void reminderCopiesAdvisorWhenAuthorIsMissing() throws Exception {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
+        );
+        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(message);
+        Student student = new Student("Jane Doe", Grade.GRADE_2B, "family@test.local", null);
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(Optional.of(student));
+        when(advisorRepository.findByGrade(2)).thenReturn(List.of(new Advisor("Advisor", "advisor@test.local", 2)));
+        Report report = new Report();
+        report.setStudent("Jane Doe");
+        report.setGrade(Grade.GRADE_2B);
+        report.setReportType(ReportType.REPORT);
+
+        service.resendReportEmail(report, null, null, null);
+
+        verify(mailSender).send(message);
+        assertArrayEquals(
+                new String[]{"advisor@test.local"},
+                Arrays.stream(message.getRecipients(MimeMessage.RecipientType.CC)).map(Address::toString).toArray(String[]::new)
+        );
+    }
+
+    @Test
+    void reportEmailStillSendsWhenStudentGradeIsMissing() throws Exception {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", false
+        );
+        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(message);
+        Student student = new Student("Jane Doe", null, "family@test.local", null);
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(Optional.of(student));
+        Report report = new Report();
+        report.setStudent("Jane Doe");
+        report.setGrade(Grade.GRADE_2A);
+        report.setReportType(ReportType.REPORT);
+
+        service.notifyReportCreated(report, null, null, null);
+
+        verify(advisorRepository, never()).findByGrade(org.mockito.ArgumentMatchers.any());
+        verify(mailSender).send(message);
+        assertNull(message.getRecipients(MimeMessage.RecipientType.CC));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @ExtendWith(OutputCaptureExtension.class)
+    void logOnlyPreviewsReportEmailsWithoutSending(boolean reminder, CapturedOutput output) {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", true, "http://localhost:5173", true
+        );
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        when(studentRepository.findByFullNameIgnoreCase("Jane Doe")).thenReturn(
+                Optional.of(new Student("Jane Doe", Grade.GRADE_2A, "family@test.local", null))
+        );
+        when(advisorRepository.findByGrade(2)).thenReturn(List.of(new Advisor("Advisor", "advisor@test.local", 2)));
+        Report report = new Report();
+        report.setId(42);
+        report.setStudent("Jane Doe");
+        report.setGrade(Grade.GRADE_2A);
+        report.setReportType(ReportType.REPORT);
+        User author = new User();
+        author.setEmail("teacher@test.local");
+        report.setUser(author);
+        byte[] pdf = "pdf".getBytes(StandardCharsets.UTF_8);
+
+        if (reminder) {
+            service.resendReportEmail(report, pdf, null, null);
+        } else {
+            service.notifyReportCreated(report, pdf, null, null);
+        }
+
+        verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+        assertTrue(output.getOut().contains("Email preview (not sent)"));
+        assertTrue(output.getOut().contains("To: [family@test.local]"));
+        assertTrue(output.getOut().contains("CC: [teacher@test.local, advisor@test.local]"));
+        assertTrue(output.getOut().contains(reminder ? "Subject: Recordatorio:" : "Subject: Aviso Importante:"));
+        assertTrue(output.getOut().contains("Attachment: REPORTE_Jane Doe_.pdf"));
+        assertTrue(output.getOut().contains("http://localhost:5173/reports/public/42"));
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void logOnlyPreviewsPasswordResetWithoutSending(CapturedOutput output) {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, mock(StudentRepository.class), advisorRepository,
+                "noreply@test.local", true, "http://localhost:5173", true
+        );
+        when(mailSender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+
+        service.sendPasswordResetEmail("user@test.local", "http://localhost:5173/reset?token=example");
+
+        verify(mailSender, never()).send(org.mockito.ArgumentMatchers.any(MimeMessage.class));
+        assertTrue(output.getOut().contains("Email preview (not sent)"));
+        assertTrue(output.getOut().contains("To: [user@test.local]"));
+        assertTrue(output.getOut().contains("http://localhost:5173/reset?token=example"));
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void disabledMailDoesNotPreviewOrSend(CapturedOutput output) {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        StudentRepository studentRepository = mock(StudentRepository.class);
+        EmailNotificationService service = new EmailNotificationService(
+                mailSender, studentRepository, advisorRepository, "noreply@test.local", false, "http://localhost:5173", true
+        );
+
+        service.notifyReportCreated(new Report(), null, null, null);
+        service.sendPasswordResetEmail("user@test.local", "http://localhost:5173/reset?token=example");
+
+        verifyNoInteractions(mailSender, studentRepository, advisorRepository);
+        assertFalse(output.getOut().contains("Email preview"));
+        assertFalse(output.getOut().contains("token=example"));
     }
 
     private String expectedReportBody(String student, String reportType, String date, String author) {

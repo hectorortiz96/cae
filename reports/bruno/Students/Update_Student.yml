@@ -5,7 +5,7 @@ info:
 
 http:
   method: PUT
-  url: "{{baseUrl}}/students/details?contactemail1=family1%40example.com"
+  url: "{{baseUrl}}/admin/students?contactemail1=family1%40example.com"
   body:
     type: json
     data: |-

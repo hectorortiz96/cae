@@ -2,15 +2,12 @@ package com.cae.reports.service;
 
 import com.cae.reports.dto.request.UpdateStudentRequest;
 import com.cae.reports.model.Grade;
-import com.cae.reports.model.Report;
 import com.cae.reports.model.Student;
-import com.cae.reports.repository.ReportRepository;
 import com.cae.reports.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,8 +16,7 @@ import static org.mockito.Mockito.*;
 
 class StudentServiceTests {
     private final StudentRepository students = mock(StudentRepository.class);
-    private final ReportRepository reports = mock(ReportRepository.class);
-    private final StudentService service = new StudentService(students, reports);
+    private final StudentService service = new StudentService(students);
 
     @Test
     void getsStudentByExactTrimmedName() {
@@ -36,27 +32,19 @@ class StudentServiceTests {
                 () -> service.getStudentByFullName("Missing Student")).getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
                 () -> service.updateStudent("missing@example.com", request())).getStatusCode());
-        verifyNoInteractions(reports);
     }
 
     @Test
-    void renamesReportsButPreservesHistoricalGrade() {
+    void updatesStudentWithoutChangingHistoricalReports() {
         Student student = student();
-        Report report = new Report();
-        report.setStudent("Jane Doe");
-        report.setGrade(Grade.GRADE_1A);
         when(students.findById("parent@example.com")).thenReturn(Optional.of(student));
-        when(reports.findByStudentIgnoreCase("Jane Doe")).thenReturn(List.of(report));
         when(students.save(any(Student.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Student result = service.updateStudent("parent@example.com", request());
 
         assertEquals("Jane Smith", result.getFullName());
         assertEquals(Grade.GRADE_2B, result.getGrade());
-        assertEquals("Jane Smith", report.getStudent());
-        assertEquals(Grade.GRADE_1A, report.getGrade());
         assertNull(result.getContactemail2());
-        verify(reports).saveAll(List.of(report));
         verify(students, never()).delete(any(Student.class));
     }
 
@@ -76,7 +64,6 @@ class StudentServiceTests {
         order.verify(students).delete(original);
         order.verify(students).flush();
         order.verify(students).save(result);
-        verifyNoInteractions(reports);
     }
 
     @Test
@@ -88,7 +75,6 @@ class StudentServiceTests {
         assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
                 () -> service.updateStudent("parent@example.com", request())).getStatusCode());
         verify(students, never()).save(any(Student.class));
-        verifyNoInteractions(reports);
     }
 
     @Test
@@ -101,7 +87,6 @@ class StudentServiceTests {
                 () -> service.updateStudent("parent@example.com",
                         new UpdateStudentRequest("Jane Smith", "2B", "taken@example.com", null))).getStatusCode());
         verify(students, never()).delete(any(Student.class));
-        verifyNoInteractions(reports);
     }
 
     private Student student() {

@@ -5,6 +5,7 @@ import com.cae.reports.model.Report;
 import com.cae.reports.model.ReportType;
 import com.cae.reports.model.Student;
 import com.cae.reports.model.User;
+import com.cae.reports.repository.AdvisorRepository;
 import com.cae.reports.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -45,9 +46,11 @@ class EmailNotificationLiveSmtpTests {
         EmailNotificationService emailNotificationService = new EmailNotificationService(
                 mailSender,
                 studentRepository,
+                mock(AdvisorRepository.class),
                 mailSender.getUsername(),
                 true,
-                envOrDefault("APP_PUBLIC_REPORT_BASE_URL", "http://localhost:5173")
+                envOrDefault("APP_PUBLIC_REPORT_BASE_URL", "http://localhost:5173"),
+                false
         );
 
         Report report = new Report();
@@ -76,4 +79,3 @@ class EmailNotificationLiveSmtpTests {
         return (value == null || value.isBlank()) ? fallback : value;
     }
 }
-

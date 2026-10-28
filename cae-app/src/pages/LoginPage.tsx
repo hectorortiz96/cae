@@ -238,7 +238,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
             </Box>
 
             {/* Footer */}
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Box sx={{ display: 'none', mt: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 ¿No tiene una cuenta?{' '}
                 <Box
@@ -255,7 +255,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
 
         {/* Info Text */}
         <Box
-          sx={{
+          sx={{display: 'none',
             mt: { xs: 2.5, sm: 4 },
             p: 2,
             backgroundColor: '#f5f5f5',

@@ -1,0 +1,19 @@
+info:
+  name: Update User
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/admin/users/{{userId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "johnny",
+        "fullName": "John Doe",
+        "email": "john@example.com"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"

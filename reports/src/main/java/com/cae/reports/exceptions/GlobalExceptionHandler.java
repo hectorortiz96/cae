@@ -7,9 +7,11 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import org.springframework.security.access.AccessDeniedException;
 import java.security.SignatureException;
@@ -18,6 +20,11 @@ import java.security.SignatureException;
 // Handles various exceptions thrown during request processing and returns appropriate HTTP responses with detailed error information.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ProblemDetail handleRequestParameterException(Exception exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
 
     // Handles exceptions that already carry an HTTP status, such as a 404 or 409.
     @ExceptionHandler(ResponseStatusException.class)

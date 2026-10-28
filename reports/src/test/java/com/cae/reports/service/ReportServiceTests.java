@@ -12,7 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,9 +28,44 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ReportServiceTests {
+
+    @Test
+    void deleteReportsBeforeUsesStartOfSelectedDateInUtc() {
+        ReportRepository repository = mock(ReportRepository.class);
+        EmailNotificationService notifications = mock(EmailNotificationService.class);
+        ReportService service = new ReportService(repository, notifications);
+        Date cutoff = Date.from(Instant.parse("2026-10-01T00:00:00Z"));
+        when(repository.deleteReportsCreatedBefore(cutoff)).thenReturn(7);
+
+        assertEquals(7, service.deleteReportsBefore(LocalDate.of(2026, 10, 1)));
+
+        verify(repository).deleteReportsCreatedBefore(cutoff);
+        verifyNoInteractions(notifications);
+    }
+
+    @Test
+    void deleteReportsBeforeReturnsZeroWhenNothingMatches() {
+        ReportRepository repository = mock(ReportRepository.class);
+        ReportService service = new ReportService(repository, mock(EmailNotificationService.class));
+
+        assertEquals(0, service.deleteReportsBefore(LocalDate.of(2026, 10, 1)));
+    }
+
+    @Test
+    void deleteReportsBeforeRejectsMissingCutoffWithoutDeletingAnything() {
+        ReportRepository repository = mock(ReportRepository.class);
+        ReportService service = new ReportService(repository, mock(EmailNotificationService.class));
+
+        var exception = assertThrows(org.springframework.web.server.ResponseStatusException.class,
+                () -> service.deleteReportsBefore(null));
+
+        assertEquals(400, exception.getStatusCode().value());
+        verifyNoInteractions(repository);
+    }
 
     @Test
     void createReportSavesReportAndTriggersEmailNotification() {

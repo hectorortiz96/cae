@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -150,6 +152,15 @@ public class ReportService {
         }
 
         reportRepository.delete(report);
+    }
+
+    @Transactional
+    public int deleteReportsBefore(LocalDate before) {
+        if (before == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A cutoff date is required");
+        }
+        Date cutoff = Date.from(before.atStartOfDay(ZoneOffset.UTC).toInstant());
+        return reportRepository.deleteReportsCreatedBefore(cutoff);
     }
 
     private byte[] decodePdfAttachment(String pdfBase64, Integer reportId) {

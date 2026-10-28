@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, MenuItem, TextField, Typography } from '@mui/material'
+import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField, Typography } from '@mui/material'
 import { ArrowBack, Save } from '@mui/icons-material'
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
@@ -22,6 +22,7 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loadAttempt, setLoadAttempt] = useState(0)
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -57,9 +58,17 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
       setError('El nombre completo y el correo electrónico de contacto principal son obligatorios.')
       return
     }
+
+    setConfirmSaveOpen(true)
+  }
+
+  const confirmSave = async () => {
+    if (!student) return
+
+    setConfirmSaveOpen(false)
     setSaving(true)
     try {
-      const result = await apiFetch<Student>(API_ROUTES.students.update(originalEmail), {
+      const result = await apiFetch<Student>(API_ROUTES.admin.updateStudent(originalEmail), {
         method: 'PUT',
         headers: getAuthHeader(),
         body: JSON.stringify(student),
@@ -110,7 +119,7 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
                 <TextField label="Correo electrónico de contacto secundario" type="email" value={student.contactemail2 ?? ''} disabled={saving}
                   onChange={(event) => updateField('contactemail2', event.target.value)} slotProps={{ htmlInput: { maxLength: 100 } }} />
                 <Typography variant="body2" color="text.secondary">
-                  Los cambios de nombre también se aplican a las incidencias existentes. Las incidencias existentes conservan su grupo original.
+                  Las incidencias existentes conservan el nombre y el grupo registrados cuando se crearon.
                 </Typography>
                 <Button type="submit" variant="contained" startIcon={saving ? <CircularProgress size={18} /> : <Save />} disabled={saving}>
                   {saving ? 'Guardando...' : 'Guardar cambios'}
@@ -119,6 +128,20 @@ export default function EditStudentPage({ studentName, onBack, onSaved }: EditSt
             )}
           </CardContent>
         </Card>
+        <Dialog open={confirmSaveOpen} onClose={() => setConfirmSaveOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>¿Confirmar cambios del alumno?</DialogTitle>
+          <DialogContent>
+            <Alert severity="warning" sx={{ mt: 1 }}>
+              Los reportes anteriores no podrán ser reenviados a los correos electrónicos si se cambia el nombre del alumno. Para reenviar reportes anteriores, elimine la incidencia y cree una nueva.
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmSaveOpen(false)}>Cancelar</Button>
+            <Button variant="contained" onClick={confirmSave} disabled={saving}>
+              Confirmar y guardar
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Container>
   )

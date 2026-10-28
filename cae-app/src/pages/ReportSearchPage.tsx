@@ -32,6 +32,8 @@ import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, isAdmin, logout } from '../utils/authUtils'
 import type { Report } from '../types'
+import TablePaginationControls from '../components/TablePaginationControls'
+import { usePagination } from '../hooks/usePagination'
 
 interface ReportSearchPageProps {
   onBack: () => void
@@ -45,6 +47,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
   const [studentName, setStudentName] = useState('')
   const [searchedName, setSearchedName] = useState('')
   const [reports, setReports] = useState<Report[]>([])
+  const { page, setPage, paginatedItems: paginatedReports } = usePagination(reports)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [shareMessage, setShareMessage] = useState('')
@@ -112,6 +115,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
 
   const handleStudentNameChange = (value: string) => {
     setStudentName(value)
+    setPage(0)
     setShareMessage('')
     setShareError('')
 
@@ -244,7 +248,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
         {reports.length > 0 && (
           <>
             <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
-              {reports.map((report) => (
+              {paginatedReports.map((report) => (
                 <Paper
                   key={report.id}
                   variant="outlined"
@@ -325,7 +329,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reports.map((report) => (
+                  {paginatedReports.map((report) => (
                     <TableRow
                       key={report.id}
                       onClick={() => onViewReport(report.id)}
@@ -406,6 +410,7 @@ export default function ReportSearchPage({ onBack, onLogout, onViewReport, onEdi
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePaginationControls count={reports.length} page={page} onPageChange={setPage} />
           </>
         )}
       </Box>

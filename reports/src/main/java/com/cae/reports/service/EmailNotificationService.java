@@ -1,7 +1,9 @@
 package com.cae.reports.service;
 
+import com.cae.reports.model.Advisor;
 import com.cae.reports.model.Report;
 import com.cae.reports.model.Student;
+import com.cae.reports.repository.AdvisorRepository;
 import com.cae.reports.repository.StudentRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -10,15 +12,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,8 +38,10 @@ public class EmailNotificationService {
 
     private final JavaMailSender mailSender;
     private final StudentRepository studentRepository;
+    private final AdvisorRepository advisorRepository;
     private final String fromAddress;
     private final boolean mailEnabled;
+    private final boolean logOnly;
     private final String publicReportBaseUrl;
     private final String reportBodyTemplate;
     private final String reminderBodyTemplate;
@@ -42,14 +49,18 @@ public class EmailNotificationService {
     public EmailNotificationService(
             JavaMailSender mailSender,
             StudentRepository studentRepository,
+            AdvisorRepository advisorRepository,
             @Value("${app.mail.from:no-reply@cae.local}") String fromAddress,
             @Value("${app.mail.enabled:true}") boolean mailEnabled,
-            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl
+            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl,
+            @Value("${app.mail.log-only:false}") boolean logOnly
     ) {
         this.mailSender = mailSender;
         this.studentRepository = studentRepository;
+        this.advisorRepository = advisorRepository;
         this.fromAddress = fromAddress;
         this.mailEnabled = mailEnabled;
+        this.logOnly = logOnly;
         this.publicReportBaseUrl = normalizeBaseUrl(publicReportBaseUrl);
         this.reportBodyTemplate = loadTemplate("templates/report-email.txt");
         this.reminderBodyTemplate = loadTemplate("templates/report-reminder-email.txt");
@@ -89,7 +100,7 @@ public class EmailNotificationService {
         }
 
         sendReportEmail(report, student, recipients, pdfAttachment, pdfFileName, pdfMimeType, false);
-        LOGGER.info("Sent report-created email for report {} to {}", report.getId(), String.join(", ", recipients));
+        LOGGER.info("{} report-created email for report {} to {}", logOnly ? "Logged" : "Sent", report.getId(), String.join(", ", recipients));
     }
 
     public void resendReportEmail(
@@ -104,18 +115,27 @@ public class EmailNotificationService {
 
         String studentName = report.getStudent() == null ? "" : report.getStudent().trim();
         if (studentName.isEmpty()) {
-            throw new IllegalStateException("Student name is missing for this report");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No se puede enviar el correo: el reporte no tiene un nombre de alumno válido."
+            );
         }
 
         Student student = studentRepository.findByFullNameIgnoreCase(studentName)
-                .orElseThrow(() -> new IllegalStateException("Student was not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "No se puede enviar el correo: el alumno ya no está registrado (posiblemente fue eliminado) y no hay datos de contacto disponibles."
+                ));
         List<String> recipients = resolveRecipients(student);
         if (recipients.isEmpty()) {
-            throw new IllegalStateException("No contact email addresses were found for this student");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No se puede enviar el correo: el alumno no tiene correos de contacto registrados."
+            );
         }
 
         sendReportEmail(report, student, recipients, pdfAttachment, pdfFileName, pdfMimeType, true);
-        LOGGER.info("Resent report email for report {} to {}", report.getId(), String.join(", ", recipients));
+        LOGGER.info("{} report reminder email for report {} to {}", logOnly ? "Logged" : "Sent", report.getId(), String.join(", ", recipients));
     }
 
     private void sendReportEmail(
@@ -134,15 +154,14 @@ public class EmailNotificationService {
 
             helper.setFrom(fromAddress);
             helper.setTo(recipients.toArray(String[]::new));
-            String authorEmail = report.getUser() == null ? null : report.getUser().getEmail();
-            if (authorEmail != null && !authorEmail.isBlank()) {
-                helper.setCc(authorEmail.trim());
-            } else {
-                LOGGER.warn("Sending report email without author CC because the author's email is missing (report id={})", report.getId());
+            List<String> ccRecipients = resolveCcRecipients(report, student);
+            if (!ccRecipients.isEmpty()) {
+                helper.setCc(ccRecipients.toArray(String[]::new));
             }
             helper.setSubject((reminder ? "Recordatorio: " : "Aviso Importante: ") + report.getReportType().getValue() +
                     " para " + student.getFullName() + " y Confirmación de Recepción");
-            helper.setText(buildBody(report, reminder ? reminderBodyTemplate : reportBodyTemplate));
+            String body = buildBody(report, reminder ? reminderBodyTemplate : reportBodyTemplate);
+            helper.setText(body);
 
             if (hasAttachment) {
                 helper.addAttachment(
@@ -152,10 +171,49 @@ public class EmailNotificationService {
                 );
             }
 
-            mailSender.send(message);
+            sendOrLog(message, body, hasAttachment ? resolveAttachmentName(report) : null);
         } catch (MessagingException ex) {
             throw new IllegalStateException("Failed to build report notification email", ex);
         }
+    }
+
+    private void sendOrLog(MimeMessage message, String body, String attachmentName) throws MessagingException {
+        if (logOnly) {
+            LOGGER.info("Email preview (not sent):\nFrom: {}\nTo: {}\nCC: {}\nSubject: {}\nAttachment: {}\n\n{}",
+                    Arrays.toString(message.getFrom()),
+                    Arrays.toString(message.getRecipients(MimeMessage.RecipientType.TO)),
+                    Arrays.toString(message.getRecipients(MimeMessage.RecipientType.CC)),
+                    message.getSubject(), attachmentName, body);
+        } else {
+            mailSender.send(message);
+        }
+    }
+
+    private List<String> resolveCcRecipients(Report report, Student student) {
+        Set<String> ccRecipients = new LinkedHashSet<>();
+        String authorEmail = report.getUser() == null ? null : report.getUser().getEmail();
+        addRecipient(ccRecipients, authorEmail);
+        if (ccRecipients.isEmpty()) {
+            LOGGER.warn("Sending report email without author CC because the author's email is missing (report id={})", report.getId());
+        }
+
+        if (student.getGrade() == null) {
+            LOGGER.warn("Sending report email without advisor CC because the student's grade is missing (report id={})", report.getId());
+        } else {
+            int grade = Character.digit(student.getGrade().getValue().charAt(0), 10);
+            List<Advisor> advisors = advisorRepository.findByGrade(grade);
+            if (advisors.isEmpty()) {
+                LOGGER.warn("Sending report email without advisor CC because no advisors were found for grade {} (report id={})", grade, report.getId());
+            }
+            for (Advisor advisor : advisors) {
+                if (advisor.getEmail() == null || advisor.getEmail().isBlank()) {
+                    LOGGER.warn("Skipping advisor CC because the advisor's email is missing for grade {} (report id={})", grade, report.getId());
+                } else {
+                    addRecipient(ccRecipients, advisor.getEmail());
+                }
+            }
+        }
+        return new ArrayList<>(ccRecipients);
     }
 
     private List<String> resolveRecipients(Student student) {
@@ -229,10 +287,11 @@ public class EmailNotificationService {
             helper.setFrom(fromAddress);
             helper.setTo(email);
             helper.setSubject("Password Reset Request");
-            helper.setText(buildPasswordResetBody(resetLink));
+            String body = buildPasswordResetBody(resetLink);
+            helper.setText(body);
 
-            mailSender.send(message);
-            LOGGER.info("Sent password-reset email to: {}", email);
+            sendOrLog(message, body, null);
+            LOGGER.info("{} password-reset email to: {}", logOnly ? "Logged" : "Sent", email);
         } catch (MessagingException ex) {
             throw new IllegalStateException("Failed to send password reset email", ex);
         }

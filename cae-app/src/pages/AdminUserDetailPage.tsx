@@ -30,6 +30,8 @@ import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, logout } from '../utils/authUtils'
 import type { Report, UserInfo } from '../types'
+import TablePaginationControls from '../components/TablePaginationControls'
+import { usePagination } from '../hooks/usePagination'
 
 interface AdminUserDetailPageProps {
   userId: number
@@ -41,6 +43,7 @@ interface AdminUserDetailPageProps {
 export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewReport }: AdminUserDetailPageProps) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [reports, setReports] = useState<Report[]>([])
+  const { page, setPage, paginatedItems: paginatedReports } = usePagination(reports)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -64,6 +67,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
 
       setUserInfo(userData)
       setReports(reportsData)
+      setPage(0)
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.status === 401 || err.status === 403) {
@@ -203,7 +207,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
             ) : (
               <>
                 <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
-                  {reports.map((report) => (
+                  {paginatedReports.map((report) => (
                     <Paper
                       key={report.id}
                       variant="outlined"
@@ -251,7 +255,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {reports.map((report) => (
+                      {paginatedReports.map((report) => (
                         <TableRow
                           key={report.id}
                           onClick={() => onViewReport(report.id)}
@@ -301,6 +305,7 @@ export default function AdminUserDetailPage({ userId, onBack, onLogout, onViewRe
                     </TableBody>
                   </Table>
                 </TableContainer>
+                <TablePaginationControls count={reports.length} page={page} onPageChange={setPage} />
               </>
             )}
           </CardContent>

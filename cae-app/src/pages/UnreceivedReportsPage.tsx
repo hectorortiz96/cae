@@ -28,6 +28,8 @@ import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, logout } from '../utils/authUtils'
 import type { Report } from '../types'
+import TablePaginationControls from '../components/TablePaginationControls'
+import { usePagination } from '../hooks/usePagination'
 
 interface UnreceivedReportsPageProps {
   onBack: () => void
@@ -37,6 +39,7 @@ interface UnreceivedReportsPageProps {
 
 export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }: UnreceivedReportsPageProps) {
   const [reports, setReports] = useState<Report[]>([])
+  const { page, setPage, paginatedItems: paginatedReports } = usePagination(reports)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [shareMessage] = useState('')
@@ -177,7 +180,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
         {!loading && reports.length > 0 && (
           <>
             <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
-              {reports.map((report) => (
+              {paginatedReports.map((report) => (
                 <Paper
                   key={report.id}
                   variant="outlined"
@@ -237,7 +240,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {reports.map((report) => (
+                  {paginatedReports.map((report) => (
                     <TableRow
                       key={report.id}
                       onClick={() => onViewReport(report.id)}
@@ -286,6 +289,7 @@ export default function UnreceivedReportsPage({ onBack, onLogout, onViewReport }
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePaginationControls count={reports.length} page={page} onPageChange={setPage} />
           </>
         )}
       </Box>

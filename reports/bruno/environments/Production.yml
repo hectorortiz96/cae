@@ -1,7 +1,7 @@
-﻿name: Local1
+name: Production
 variables:
   - name: baseUrl
-    value: https://api.cae-reports.com
+    value: https://cae-reports-back-376643686478.northamerica-south1.run.app
     description: ""
   - name: token
     value: ""

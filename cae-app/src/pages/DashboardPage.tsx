@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Container,
   Box,
@@ -22,16 +22,20 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
+  TextField,
 } from '@mui/material'
 import {
   Person,
   Email,
   CalendarToday,
+  Edit,
   Add,
   Logout,
   Description,
   Group,
   UploadFile,
+  Download,
   DeleteForever,
   Search,
   MarkEmailUnread,
@@ -42,7 +46,14 @@ import {
 import { ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import { getAuthHeader, logout } from '../utils/authUtils'
-import type { UserInfo, Report, StudentBatchImportResponse } from '../types'
+import type { UserInfo, Report } from '../types'
+import TablePaginationControls from '../components/TablePaginationControls'
+import AdminReportDeletion from '../components/AdminReportDeletion'
+import { usePagination } from '../hooks/usePagination'
+import { useAdminUserEditor } from '../hooks/useAdminUserEditor'
+import { useProfileEditor } from '../hooks/useProfileEditor'
+import { useReportExport } from '../hooks/useReportExport'
+import { useStudentActions } from '../hooks/useStudentActions'
 
 interface DashboardPageProps {
   onLogout: () => void
@@ -58,20 +69,34 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
   const [reports, setReports] = useState<Report[]>([])
   const [reportAgeCutoff] = useState(() => Date.now() - 3 * 24 * 60 * 60 * 1000)
   const [adminUsers, setAdminUsers] = useState<UserInfo[]>([])
+  const { page: usersPage, setPage: setUsersPage, paginatedItems: paginatedUsers } = usePagination(adminUsers)
+  const { page: reportsPage, setPage: setReportsPage, paginatedItems: paginatedReports } = usePagination(reports)
   const [adminLoading, setAdminLoading] = useState(false)
   const [adminError, setAdminError] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
-  const [shareMessage] = useState<string>('')
-  const [shareError] = useState<string>('')
-  const [studentActionMessage, setStudentActionMessage] = useState<string>('')
-  const [studentActionError, setStudentActionError] = useState<string>('')
-  const [studentImportSummary, setStudentImportSummary] = useState<StudentBatchImportResponse | null>(null)
-  const [importingStudents, setImportingStudents] = useState(false)
-  const [deletingStudents, setDeletingStudents] = useState(false)
-  const [showImportInfoDialog, setShowImportInfoDialog] = useState(false)
-  const [showDeleteWarningDialog, setShowDeleteWarningDialog] = useState(false)
-  const importFileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleLogout = () => {
+    logout()
+    onLogout()
+  }
+
+  const updateAdminUser = (updatedUser: UserInfo) => {
+    setAdminUsers((users) => users.map((user) => user.id === updatedUser.id ? updatedUser : user))
+  }
+
+  const profileEditor = useProfileEditor(userInfo, (updatedUser) => {
+    setUserInfo(updatedUser)
+    updateAdminUser(updatedUser)
+  })
+  const userEditor = useAdminUserEditor({
+    userInfo,
+    onUpdated: updateAdminUser,
+    onCurrentUserUpdated: setUserInfo,
+    onLogout: handleLogout,
+  })
+  const reportExport = useReportExport(handleLogout)
+  const { fileInputRef: importFileInputRef, ...studentActions } = useStudentActions()
 
   useEffect(() => {
     fetchDashboardData()
@@ -141,11 +166,6 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
 
   const isCurrentUserAdmin = userInfo?.role === 'ADMIN'
 
-  const handleLogout = () => {
-    logout()
-    onLogout()
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-MX', {
       year: 'numeric',
@@ -175,88 +195,6 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         return 'primary'
       default:
         return 'default'
-    }
-  }
-
-
-  const handleChooseImportFile = () => {
-    if (importingStudents || deletingStudents) {
-      return
-    }
-    setShowImportInfoDialog(true)
-  }
-
-  const handleConfirmImportDialog = () => {
-    setShowImportInfoDialog(false)
-    importFileInputRef.current?.click()
-  }
-
-  const handleImportStudents = async (event: ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0]
-    event.target.value = ''
-
-    if (!selectedFile) {
-      return
-    }
-
-    setStudentActionMessage('')
-    setStudentActionError('')
-    setStudentImportSummary(null)
-    setImportingStudents(true)
-
-    try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
-
-      const response = await apiFetch<StudentBatchImportResponse>(API_ROUTES.students.import, {
-        method: 'POST',
-        headers: getAuthHeader(),
-        body: formData,
-      })
-
-      setStudentImportSummary(response)
-      setStudentActionMessage('La importación de alumnos se completó.')
-    } catch (importErr) {
-      if (importErr instanceof ApiError) {
-        setStudentActionError(importErr.message)
-      } else {
-        setStudentActionError('No se pudieron importar los alumnos. Inténtelo de nuevo.')
-      }
-    } finally {
-      setImportingStudents(false)
-    }
-  }
-
-  const handleDeleteAllStudents = async () => {
-    if (importingStudents || deletingStudents) {
-      return
-    }
-
-    setShowDeleteWarningDialog(true)
-  }
-
-  const executeDeleteAllStudents = async () => {
-    setShowDeleteWarningDialog(false)
-
-    setStudentActionMessage('')
-    setStudentActionError('')
-    setStudentImportSummary(null)
-    setDeletingStudents(true)
-
-    try {
-      await apiFetch<null>(API_ROUTES.students.base, {
-        method: 'DELETE',
-        headers: getAuthHeader(),
-      })
-      setStudentActionMessage('Se eliminaron todos los registros de alumnos.')
-    } catch (deleteErr) {
-      if (deleteErr instanceof ApiError) {
-        setStudentActionError(deleteErr.message)
-      } else {
-        setStudentActionError('No se pudieron eliminar los registros de alumnos. Inténtelo de nuevo.')
-      }
-    } finally {
-      setDeletingStudents(false)
     }
   }
 
@@ -315,7 +253,16 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
         {/* User Info Card */}
         {userInfo && (
           <Card sx={{ mb: 4, boxShadow: 3 }}>
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 }, position: 'relative', pr: { xs: 7, sm: 8 } }}>
+              <Tooltip title="Editar mis datos">
+                <IconButton
+                  aria-label="Editar mis datos"
+                  onClick={profileEditor.openDialog}
+                  sx={{ display: 'none', position: 'absolute', top: { xs: 8, sm: 16 }, right: { xs: 8, sm: 16 } }}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
               <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                 <Avatar
                   sx={{
@@ -360,7 +307,105 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
           </Card>
         )}
 
+        <Dialog
+          open={profileEditor.open}
+          onClose={() => !profileEditor.saving && profileEditor.setOpen(false)}
+          fullWidth
+          maxWidth="xs"
+        >
+          <Box component="form" onSubmit={profileEditor.save}>
+            <DialogTitle>Editar mis datos</DialogTitle>
+            <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
+              {profileEditor.error && <Alert severity="error">{profileEditor.error}</Alert>}
+              <TextField
+                label="Nombre completo"
+                value={profileEditor.fullName}
+                onChange={(event) => profileEditor.setFullName(event.target.value)}
+                required
+                disabled={profileEditor.saving}
+                slotProps={{ htmlInput: { maxLength: 150 } }}
+              />
+              <TextField
+                label="Nombre de usuario"
+                value={profileEditor.username}
+                onChange={(event) => profileEditor.setUsername(event.target.value)}
+                required
+                disabled={profileEditor.saving}
+                slotProps={{ htmlInput: { minLength: 3, maxLength: 50 } }}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button onClick={() => profileEditor.setOpen(false)} disabled={profileEditor.saving}>
+                Cancelar
+              </Button>
+              <Button type="submit" variant="contained" disabled={profileEditor.saving}>
+                {profileEditor.saving ? 'Guardando...' : 'Guardar'}
+              </Button>
+            </DialogActions>
+          </Box>
+        </Dialog>
+
         {/* Admin Panel */}
+        {isCurrentUserAdmin && (
+          <Dialog
+            open={userEditor.editingUser !== null}
+            onClose={() => !userEditor.saving && userEditor.setEditingUser(null)}
+            aria-labelledby="edit-user-title"
+            fullWidth
+            maxWidth="xs"
+          >
+            <Box component="form" onSubmit={userEditor.save}>
+              <DialogTitle id="edit-user-title">Editar usuario</DialogTitle>
+              <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
+                {userEditor.error && <Alert severity="error">{userEditor.error}</Alert>}
+                {userEditor.editingUser?.id === userInfo?.id && (
+                  <Alert severity="info">
+                    Si cambia su nombre de usuario, se cerrará la sesión y deberá iniciar sesión de nuevo.
+                  </Alert>
+                )}
+                <TextField
+                  label="Nombre completo"
+                  value={userEditor.form.fullName}
+                  onChange={(event) => userEditor.setForm({ ...userEditor.form, fullName: event.target.value })}
+                  required
+                  autoFocus
+                  disabled={userEditor.saving}
+                  slotProps={{ htmlInput: { maxLength: 150 } }}
+                />
+                <TextField
+                  label="Nombre de usuario"
+                  value={userEditor.form.username}
+                  onChange={(event) => userEditor.setForm({ ...userEditor.form, username: event.target.value })}
+                  required
+                  disabled={userEditor.saving}
+                  slotProps={{ htmlInput: { minLength: 3, maxLength: 50 } }}
+                />
+                <TextField
+                  label="Correo electrónico"
+                  type="email"
+                  value={userEditor.form.email}
+                  onChange={(event) => userEditor.setForm({ ...userEditor.form, email: event.target.value })}
+                  required
+                  disabled={userEditor.saving}
+                  slotProps={{ htmlInput: { maxLength: 100 } }}
+                />
+              </DialogContent>
+              <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button onClick={() => userEditor.setEditingUser(null)} disabled={userEditor.saving}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={userEditor.saving || userEditor.form.username.trim().length < 3 || !userEditor.form.fullName.trim() || !userEditor.form.email.trim()}
+                >
+                  {userEditor.saving ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </DialogActions>
+            </Box>
+          </Dialog>
+        )}
+
         {isCurrentUserAdmin && (
           <Card sx={{ mb: 4, boxShadow: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
@@ -397,58 +442,64 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                 </Alert>
               )}
 
+              {userEditor.message && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {userEditor.message}
+                </Alert>
+              )}
+
               <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={importingStudents ? <CircularProgress size={16} color="inherit" /> : <UploadFile />}
-                  onClick={handleChooseImportFile}
-                  disabled={importingStudents || deletingStudents}
+                  startIcon={studentActions.importing ? <CircularProgress size={16} color="inherit" /> : <UploadFile />}
+                  onClick={studentActions.chooseImportFile}
+                  disabled={studentActions.importing || studentActions.deleting}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  {importingStudents ? 'Importando...' : 'Importar alumnos desde CSV'}
+                  {studentActions.importing ? 'Importando...' : 'Importar alumnos desde CSV'}
                 </Button>
 
                 <Button
                   variant="contained"
                   color="error"
-                  startIcon={deletingStudents ? <CircularProgress size={16} color="inherit" /> : <DeleteForever />}
-                  onClick={handleDeleteAllStudents}
-                  disabled={importingStudents || deletingStudents}
+                  startIcon={studentActions.deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForever />}
+                  onClick={studentActions.confirmDeleteAll}
+                  disabled={studentActions.importing || studentActions.deleting}
                   sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
                 >
-                  {deletingStudents ? 'Eliminando...' : 'Eliminar todos los alumnos'}
+                  {studentActions.deleting ? 'Eliminando...' : 'Eliminar todos los alumnos'}
                 </Button>
 
                 <input
                   ref={importFileInputRef}
                   type="file"
                   accept=".csv,text/csv"
-                  onChange={handleImportStudents}
+                  onChange={studentActions.importStudents}
                   style={{ display: 'none' }}
                 />
               </Box>
 
-              {studentActionMessage && (
+              {studentActions.message && (
                 <Alert severity="success" sx={{ mb: 2 }}>
-                  {studentActionMessage}
+                  {studentActions.message}
                 </Alert>
               )}
 
-              {studentActionError && (
+              {studentActions.error && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                  {studentActionError}
+                  {studentActions.error}
                 </Alert>
               )}
 
-              {studentImportSummary && (
-                <Alert severity={studentImportSummary.failedRows > 0 ? 'warning' : 'success'} sx={{ mb: 2 }}>
-                  Se importaron {studentImportSummary.createdRows} de {studentImportSummary.totalRows} filas. Errores:{' '}
-                  {studentImportSummary.failedRows}.
-                  {studentImportSummary.errors.length > 0 && (
+              {studentActions.importSummary && (
+                <Alert severity={studentActions.importSummary.failedRows > 0 ? 'warning' : 'success'} sx={{ mb: 2 }}>
+                  Se importaron {studentActions.importSummary.createdRows} de {studentActions.importSummary.totalRows} filas. Errores:{' '}
+                  {studentActions.importSummary.failedRows}.
+                  {studentActions.importSummary.errors.length > 0 && (
                     <>
                       {' '}
-                      Primer error (fila {studentImportSummary.errors[0].row}): {studentImportSummary.errors[0].message}
+                      Primer error (fila {studentActions.importSummary.errors[0].row}): {studentActions.importSummary.errors[0].message}
                     </>
                   )}
                 </Alert>
@@ -461,12 +512,13 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
               ) : (
                 <>
                   <Box sx={{ display: { xs: 'grid', sm: 'none' }, gap: 1.5 }}>
-                    {adminUsers.map((user) => (
+                    {paginatedUsers.map((user) => (
                       <Paper
                         key={user.id}
                         variant="outlined"
                         onClick={() => onViewUser(user.id)}
                         onKeyDown={(event) => {
+                          if (event.target !== event.currentTarget) return
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault()
                             onViewUser(user.id)
@@ -501,13 +553,24 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                           <Typography variant="caption" color="text.secondary">
                             Se unió el {formatDate(user.createdAt)}
                           </Typography>
+                          <Button
+                            startIcon={<Edit />}
+                            aria-label={`Editar usuario ${user.username}`}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              userEditor.openDialog(user)
+                            }}
+                            sx={{ textTransform: 'none', minHeight: 44 }}
+                          >
+                            Editar
+                          </Button>
                         </Box>
                       </Paper>
                     ))}
                   </Box>
 
                   <TableContainer component={Paper} variant="outlined" sx={{ overflowX: 'auto', display: { xs: 'none', sm: 'block' } }}>
-                    <Table sx={{ minWidth: 680, tableLayout: 'fixed' }}>
+                    <Table sx={{ minWidth: 780, tableLayout: 'fixed' }}>
                       <TableHead>
                         <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>Usuario</TableCell>
@@ -515,14 +578,16 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '32%' }}>Correo electrónico</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '12%' }}>Rol</TableCell>
                           <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap', width: '18%' }}>Se unió</TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 'bold', width: 100 }}>Acciones</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {adminUsers.map((user) => (
+                        {paginatedUsers.map((user) => (
                           <TableRow
                             key={user.id}
                             onClick={() => onViewUser(user.id)}
                             onKeyDown={(event) => {
+                              if (event.target !== event.currentTarget) return
                               if (event.key === 'Enter' || event.key === ' ') {
                                 event.preventDefault()
                                 onViewUser(user.id)
@@ -555,15 +620,61 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                                 {formatDate(user.createdAt)}
                               </Typography>
                             </TableCell>
+                            <TableCell align="right">
+                              <Button
+                                size="small"
+                                startIcon={<Edit />}
+                                aria-label={`Editar usuario ${user.username}`}
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  userEditor.openDialog(user)
+                                }}
+                                sx={{ textTransform: 'none', minHeight: 44 }}
+                              >
+                                Editar
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
+                  <TablePaginationControls count={adminUsers.length} page={usersPage} onPageChange={setUsersPage} />
                 </>
               )}
             </CardContent>
           </Card>
+        )}
+
+        {isCurrentUserAdmin && (
+          <Card sx={{ mb: 4, boxShadow: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                Exportar incidencias
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Descargue todas las incidencias de todos los docentes en formato CSV.
+              </Typography>
+              {reportExport.error && <Alert severity="error" sx={{ mb: 2 }}>{reportExport.error}</Alert>}
+              {reportExport.message && <Alert severity="info" sx={{ mb: 2 }}>{reportExport.message}</Alert>}
+              <Button
+                variant="outlined"
+                startIcon={reportExport.exporting ? <CircularProgress size={18} /> : <Download />}
+                onClick={reportExport.exportAllReports}
+                disabled={reportExport.exporting}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, minHeight: 44 }}
+              >
+                {reportExport.exporting ? 'Exportando...' : 'Exportar todas las incidencias'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {isCurrentUserAdmin && (
+          <AdminReportDeletion onDeleted={(before) => {
+            const cutoff = Date.parse(`${before}T00:00:00Z`)
+            setReports((currentReports) => currentReports.filter((report) => Date.parse(report.createdAt) >= cutoff))
+          }} />
         )}
 
         {/* Reports Section */}
@@ -648,20 +759,8 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
               </Box>
             ) : (
               <>
-                {shareMessage && (
-                  <Alert severity="success" sx={{ mb: 2 }}>
-                    {shareMessage}
-                  </Alert>
-                )}
-
-                {shareError && (
-                  <Alert severity="warning" sx={{ mb: 2 }}>
-                    {shareError}
-                  </Alert>
-                )}
-
                 <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: '1fr', gap: 1.5 }}>
-                  {reports.map((report) => (
+                  {paginatedReports.map((report) => (
                     <Paper
                       key={report.id}
                       variant="outlined"
@@ -725,7 +824,7 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                          </TableRow>
                        </TableHead>
                        <TableBody>
-                         {reports.map((report) => (
+                         {paginatedReports.map((report) => (
                            <TableRow
                              key={report.id}
                              onClick={() => onViewReport(report.id)}
@@ -779,38 +878,39 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
                        </TableBody>
                      </Table>
                    </TableContainer>
+                   <TablePaginationControls count={reports.length} page={reportsPage} onPageChange={setReportsPage} />
                  </>
              )}
            </CardContent>
          </Card>
 
-         <Dialog open={showImportInfoDialog} onClose={() => setShowImportInfoDialog(false)} maxWidth="sm" fullWidth>
+         <Dialog open={studentActions.showImportInfoDialog} onClose={() => studentActions.setShowImportInfoDialog(false)} maxWidth="sm" fullWidth>
            <DialogTitle>Formato de importación CSV</DialogTitle>
            <DialogContent>
              <Typography variant="body2" sx={{ mb: 1 }}>
-               Puede incluir una fila de encabezados opcional:
+               El archivo CSV debe incluir una fila de encabezados:
              </Typography>
              <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, mb: 2, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                fullName,grade,contactemail1,contactemail2
              </Typography>
              <Typography variant="body2" sx={{ mb: 1 }}>
-               Cada fila de datos debe tener 3 o 4 columnas:
+               Exemplo de formato de fila de datos:
              </Typography>
              <Typography component="pre" variant="body2" sx={{ p: 1.5, bgcolor: '#f6f8fa', borderRadius: 1, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-               fullName,grade,contactemail1[,contactemail2]
+               Hector Ortiz Garza,1A,contacto1@ejemplo.com,contacto2@ejemplo.com (opcional)
              </Typography>
            </DialogContent>
            <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: 2, pb: 2 }}>
-             <Button onClick={() => setShowImportInfoDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
+             <Button onClick={() => studentActions.setShowImportInfoDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
                Cancelar
              </Button>
-             <Button variant="contained" onClick={handleConfirmImportDialog} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
+             <Button variant="contained" onClick={studentActions.confirmImportDialog} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
                Seleccionar archivo CSV
              </Button>
            </DialogActions>
          </Dialog>
 
-         <Dialog open={showDeleteWarningDialog} onClose={() => setShowDeleteWarningDialog(false)} maxWidth="sm" fullWidth>
+         <Dialog open={studentActions.showDeleteWarningDialog} onClose={() => studentActions.setShowDeleteWarningDialog(false)} maxWidth="sm" fullWidth>
            <DialogTitle>¿Eliminar a todos los alumnos?</DialogTitle>
            <DialogContent>
              <Alert severity="warning" sx={{ mb: 2 }}>
@@ -821,14 +921,14 @@ export default function DashboardPage({ onLogout, onCreateReport, onViewReport, 
              </Typography>
            </DialogContent>
            <DialogActions sx={{ flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'stretch', px: 2, pb: 2 }}>
-             <Button onClick={() => setShowDeleteWarningDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
+             <Button onClick={() => studentActions.setShowDeleteWarningDialog(false)} sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}>
                Cancelar
              </Button>
              <Button
                variant="contained"
                color="error"
-               onClick={executeDeleteAllStudents}
-               disabled={deletingStudents}
+               onClick={studentActions.deleteAllStudents}
+               disabled={studentActions.deleting}
                sx={{ textTransform: 'none', minHeight: 44, width: { xs: '100%', sm: 'auto' } }}
              >
                Eliminar a todos los alumnos

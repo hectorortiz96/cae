@@ -1,0 +1,22 @@
+info:
+  name: Update Current User
+  type: http
+  seq: 2
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/users/me"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "johnny",
+        "fullName": "John Doe"
+      }
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+script:
+  res: |
+    bru.setEnvVar("token", res.body.token);

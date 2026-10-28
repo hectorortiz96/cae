@@ -50,17 +50,19 @@ reports/src/main/java/com/cae/reports/
 │   ├── JwtAuthFilter.java          # JWT validation filter
 │   └── SecurityConfig.java         # Security configuration
 ├── controller/
-│   ├── AdminController.java        # Admin-only user management
+│   ├── AdminController.java        # Admin-only user and student management
 │   ├── AuthenticationController.java # Login/signup endpoints
 │   ├── ReportController.java       # Report CRUD endpoints
-│   ├── StudentController.java      # Student CSV import endpoint
+│   ├── StudentController.java      # Student lookup and CSV import endpoints
 │   └── UserController.java         # User endpoints
 ├── dto/
 │   ├── request/
 │   │   ├── LoginRequest.java
 │   │   ├── RegisterRequest.java
 │   │   ├── ReportRequest.java
-│   │   └── UpdateRoleRequest.java
+│   │   ├── UpdateRoleRequest.java
+│   │   ├── UpdateStudentRequest.java
+│   │   └── UpdateUserRequest.java
 │   └── response/
 │       ├── LoginResponse.java
 │       ├── ReportResponse.java
@@ -107,6 +109,7 @@ reports/src/main/java/com/cae/reports/
 | Method | Endpoint | Description | Required Role |
 |--------|----------|-------------|---------------|
 | GET | `/users/me` | Get current user | Any authenticated |
+| PUT | `/users/me` | Update current user's username and full name; returns updated user and refreshed JWT | Any authenticated |
 
 ### Admin (Admin Only)
 
@@ -114,9 +117,25 @@ reports/src/main/java/com/cae/reports/
 |--------|----------|-------------|
 | GET | `/admin/users` | List all users |
 | GET | `/admin/users/{id}` | Get user by ID |
+| PUT | `/admin/users/{id}` | Update username, full name, and email |
 | GET | `/admin/users/{id}/reports` | Get all reports for a user |
 | PUT | `/admin/users/{id}/role` | Update user role |
+| PUT | `/admin/students?contactemail1={email}` | Update a student by their current primary contact email |
 | DELETE | `/admin/users/{id}` | Delete user |
+| DELETE | `/admin/reports?before=YYYY-MM-DD` | Permanently delete reports created before the selected date |
+
+`DELETE /admin/reports?before=2026-10-01` deletes reports with `createdAt`
+strictly earlier than `2026-10-01T00:00:00Z`. Reports on or after the selected
+date are kept, regardless of received status or author. Requires an admin JWT.
+Returns `200 OK` with `{"deletedCount": 7}` (or `0` if nothing matched).
+A missing, blank, or invalid `before` date returns `400 Bad Request`.
+Deletion is permanent; users and students are not deleted.
+
+`PUT /admin/students` accepts `fullName`, `grade` (`1A` through `3C`),
+`contactemail1`, and optional `contactemail2`. A blank secondary email clears
+that value. Student edits do not alter existing reports, which preserve their
+recorded student name and grade. `PUT /students/details?contactemail1={email}`
+is also available for compatibility.
 
 ### Reports (Authenticated)
 
@@ -139,8 +158,16 @@ reports/src/main/java/com/cae/reports/
 |--------|----------|-------------|---------------|
 | GET | `/students/grade/{grade}` | Get students by grade (e.g., `1A`, `2B`) and return `StudentResponse` DTOs with display-grade values | Any authenticated |
 | GET | `/students/name/{name}` | Search students by name (case-insensitive contains) and return `StudentResponse` DTOs with display-grade values | Any authenticated |
+| GET | `/students/details?fullName={name}` | Get a student's details by exact name | ADMIN |
+| PUT | `/students/details?contactemail1={email}` | Update a student (compatibility route; prefer the admin route below) | ADMIN |
 | POST | `/students/import` | Upload CSV to create students in batch | ADMIN |
 | DELETE | `/students` | Delete all student records | ADMIN |
+
+The admin route `PUT /admin/students?contactemail1={email}` is the preferred
+student update endpoint. Its body contains `fullName`, `grade` (`1A` through
+`3C`), `contactemail1`, and optional `contactemail2`. Blank secondary emails
+clear that value. Student edits do not change the name or grade stored on
+existing reports.
 
 CSV format accepted by `/students/import`:
 
@@ -180,6 +207,29 @@ Student list responses use `StudentResponse` DTOs so the frontend receives the d
   "user": {
     "id": 1,
     "username": "john",
+    "email": "john@example.com",
+    "fullName": "John Doe",
+    "role": "USER"
+  }
+}
+```
+
+**Update Current User:**
+```json
+// PUT /users/me
+// Header: Authorization: Bearer <token>
+{
+  "username": "johnny",
+  "fullName": "John Doe"
+}
+
+// Response (200 OK)
+{
+  "token": "<refreshed JWT>",
+  "expiresIn": 3600000,
+  "user": {
+    "id": 1,
+    "username": "johnny",
     "email": "john@example.com",
     "fullName": "John Doe",
     "role": "USER"
@@ -233,6 +283,22 @@ Error messages for reset password:
 - `"Passwords do not match"` - password ≠ passwordConfirm
 - `"Invalid or expired reset token"` - token not found in DB or token expired (>24 hours)
 - `"User with email not found"` - Email address doesn't exist in the system
+
+**Update User (Admin):**
+```json
+// PUT /admin/users/1
+{
+  "username": "johnny",
+  "fullName": "John Doe",
+  "email": "john@example.com"
+}
+```
+
+Requires an admin bearer token and all three fields. Returns `200 OK` with the
+updated user (without their password), `400` for invalid fields, `404` if the
+user does not exist, or `409` if another user has the username or email.
+Role and password remain unchanged. If the username changes, the affected user
+must log in again because existing JWTs identify users by username.
 
 **Update Role (Admin):**
 ```json
@@ -329,4 +395,3 @@ mary ann smith,2B,mary.smith@example.com,mary.parent@example.com
 |---------|----------------------------|---------------------------------------------------------------------|
 | `USER`  | Default role for new users | Access own profile, view users                                      |
 | `ADMIN` | Administrator              | Full user management, student batch import, and delete all students |
-

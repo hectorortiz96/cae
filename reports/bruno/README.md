@@ -14,6 +14,7 @@ The collection includes all API endpoints organized into logical groups:
 
 ### **Users**
 - `Get Current User` - Fetch authenticated user's current profile
+- `Update Current User` - Update the authenticated user's username and full name; refreshes the saved JWT
 
 ### **Reports**
 - `Create Report` - Create a new report
@@ -35,7 +36,9 @@ The collection includes all API endpoints organized into logical groups:
 - `Get User by ID` - Retrieve specific user details (admin only)
 - `Get User Reports` - Get all reports by a user (admin only)
 - `Update User Role` - Change user's role (admin only)
+- `Update User` - Update a user's username, full name, and email by ID (admin only)
 - `Delete User` - Delete a user (admin only)
+- `Delete Reports Before Date` - Permanently remove reports created before a selected date (admin only)
 
 ### **Students**
 - `Get All Students` - Retrieve all students
@@ -52,7 +55,10 @@ The collection includes all API endpoints organized into logical groups:
 |---------|----------|-------|
 | Resend Report Email | `POST /reports/{id}/resend-email` | Set `reportId` and log in as the report owner or an admin. Leave the PDF fields empty to omit the attachment, or supply Base64 PDF content and `application/pdf`. Returns `204 No Content`. |
 | Get Student Details | `GET /students/details?fullName=...` | Replace the URL-encoded sample name with the student's exact full name. Requires an admin token. |
-| Update Student | `PUT /students/details?contactemail1=...` | The query parameter identifies the student's current primary email; the JSON body contains the new values. Use grades `1A` through `3C`; secondary email can be `null`. Renaming also updates matching reports. Requires an admin token. |
+| Update Student | `PUT /admin/students?contactemail1=...` | The query parameter identifies the student's current primary email; the JSON body contains the new values. Use grades `1A` through `3C`; secondary email can be `null`. Existing reports retain their recorded student name and grade. Requires an admin token. |
+| Update Current User | `PUT /users/me` | Send `username` and `fullName`. A successful response includes the updated user and a refreshed JWT; the Bruno request saves the new token automatically. Requires authentication. |
+| Update User | `PUT /admin/users/{userId}` | Send `username`, `fullName`, and `email`. Requires an admin token. Returns the updated user; duplicate usernames or emails return `409`. A username change requires the affected user to log in again. |
+| Delete Reports Before Date | `DELETE /admin/reports?before=YYYY-MM-DD` | Set `beforeDate` explicitly before sending. Permanently deletes reports created strictly before midnight UTC on that date, regardless of author or received status. Reports on or after the date are kept. Requires an admin token; returns `200` with `{"deletedCount": 7}` (or `0`). Missing or invalid dates return `400`. |
 
 ## 🚀 Getting Started
 
@@ -63,22 +69,22 @@ The collection includes all API endpoints organized into logical groups:
 ### Installation
 
 1. Open Bruno
-2. Click **Open Collection** → Navigate to the `reports` folder
-3. Select **bruno.json** to load the collection
+2. Click **Open Collection** → Navigate to `reports/bruno`
+3. Open the collection folder containing `opencollection.yml`
 
 ### Configuration
 
 The collection uses environment variables for flexibility:
 
 #### **Local Development Environment**
-Located in `environments/Local.json` (within the Bruno collection), contains:
+Located in `environments/Local.yml` (within the Bruno collection), contains:
 - `baseUrl`: `http://localhost:8080`
 - `token`: (auto-populated after login)
 - `userId`: User ID for admin operations
 
 #### **Production Environment**
-Located in `environments/Production.json` (within the Bruno collection), contains:
-- `baseUrl`: `https://api.cae-reports.com`
+Located in `environments/Production.yml` (within the Bruno collection), contains:
+- `baseUrl`: `https://cae-reports-back-376643686478.northamerica-south1.run.app`
 - `token`: (auto-populated after login)
 - `userId`: User ID for admin operations
 

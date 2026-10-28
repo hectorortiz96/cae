@@ -1,0 +1,11 @@
+info:
+  name: Delete Reports Before Date
+  type: http
+  seq: 7
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/admin/reports?before={{beforeDate}}"
+  auth:
+    type: bearer
+    token: "{{token}}"
