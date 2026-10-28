@@ -163,8 +163,8 @@ function ReportPdfDocument({
               <Text style={styles.contentBox}>{content}</Text>
 
               <Text style={styles.text}>
-                Este documento deberá ser regresado <Text style={styles.fieldValue}>al día siguiente </Text> por medio
-                del alumno(a) a su maestro(a), con la FIRMA DE ENTERADOS de sus padres.
+                Favor de confirmar para <Text style={styles.fieldValue}>el día siguiente </Text> por medio
+                de nuestro portal para confirmar su recepción. Se les ha mandado un correo electrónico con el enlace para confirmar la recepción de este reporte.
               </Text>
               <Text style={styles.reportTypeNotice}>
                 La conducta tiene un valor del 10% en la calificacion de cada materia.

@@ -98,7 +98,11 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
       onLoginSuccess?.()
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message)
+        setError(
+          err.status === 401 || err.message.trim().toLowerCase() === 'bad credentials'
+            ? 'El nombre de usuario o la contraseña son incorrectos.'
+            : err.message,
+        )
       } else if (err instanceof Error && err.message.includes('Failed to fetch')) {
         setError('No se pudo establecer la conexión. Verifique que las URL del entorno del servidor y del sitio estén configuradas correctamente.')
       } else {

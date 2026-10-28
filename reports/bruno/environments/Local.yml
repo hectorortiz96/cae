@@ -6,3 +6,7 @@ variables:
     value: ""
   - name: userId
     value: "1"
+  - name: username
+    value: ""
+  - name: password
+    value: ""

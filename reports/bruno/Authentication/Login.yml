@@ -1,4 +1,4 @@
-﻿info:
+info:
   name: Login
   type: http
   seq: 2
@@ -10,11 +10,18 @@ http:
     type: json
     data: |-
       {
-        "username": "admin",
-        "password": "caeadmin2026"
+        "username": "{{username}}",
+        "password": "{{password}}"
       }
-  auth: none
 
-script:
-  res: |
-    bru.setEnvVar("token", res.body.token);
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("token", res.body.token);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true

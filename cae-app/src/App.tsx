@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Box, CircularProgress, CssBaseline } from '@mui/material'
+import { Box, CircularProgress, createTheme, CssBaseline, ThemeProvider } from '@mui/material'
 import { Navigate, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { isAdmin, isAuthenticated } from './utils/authUtils'
 import { AnonymousOnly, RequireAuth } from './routes/AuthGuards'
@@ -33,6 +33,21 @@ const RouteFallback = () => {
     </Box>
   )
 }
+
+const theme = createTheme({
+  palette: {
+    text: {
+      secondary: '#555',
+    },
+  },
+  typography: {
+    fontFamily: 'system-ui, "Segoe UI", Roboto, Arial, sans-serif',
+    fontWeightRegular: 500,
+    fontWeightMedium: 600,
+    body1: { fontWeight: 500 },
+    body2: { fontWeight: 500 },
+  },
+})
 
 // Route components that handle navigation and URL params.
 const LoginRoute = () => {
@@ -183,7 +198,7 @@ function App() {
   const defaultRoute = isAuthenticated() ? '/dashboard' : '/login'
 
   return (
-    <>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
@@ -280,7 +295,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
-    </>
+    </ThemeProvider>
   )
 }
 

@@ -52,7 +52,7 @@ public class EmailNotificationService {
             AdvisorRepository advisorRepository,
             @Value("${app.mail.from:no-reply@cae.local}") String fromAddress,
             @Value("${app.mail.enabled:true}") boolean mailEnabled,
-            @Value("${app.public-report.base-url:http://localhost:5173}") String publicReportBaseUrl,
+            @Value("${app.public-report.public-url:http://localhost:5173}") String publicReportBaseUrl,
             @Value("${app.mail.log-only:false}") boolean logOnly
     ) {
         this.mailSender = mailSender;

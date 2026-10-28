@@ -1,9 +1,15 @@
 name: Production
 variables:
   - name: baseUrl
-    value: https://cae-reports-back-376643686478.northamerica-south1.run.app
+    value: https://caereportes-service.cloud.run
     description: ""
   - name: token
+    value: ""
+    description: ""
+  - name: username
+    value: ""
+    description: ""
+  - name: password
     value: ""
     description: ""
   - name: userId
