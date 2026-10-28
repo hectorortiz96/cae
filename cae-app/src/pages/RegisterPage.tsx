@@ -13,7 +13,7 @@ import {
   InputAdornment,
 } from '@mui/material'
 import { Lock, Person, Email, ManageAccounts, Visibility, VisibilityOff } from '@mui/icons-material'
-import { ApiError, apiFetch } from '../api/client'
+import { API_BASE_URL, ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 
 interface RegisterFormData {
@@ -296,7 +296,7 @@ export default function RegisterPage({ onSwitchToLogin, onSuccess }: { onSwitchT
           }}
         >
           <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-            Punto de conexión de API: {import.meta.env.VITE_API_BASE_URL}
+            Punto de conexión de API: {API_BASE_URL}
             {API_ROUTES.auth.signup}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>

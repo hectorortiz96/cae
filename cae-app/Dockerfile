@@ -14,13 +14,16 @@ RUN npm ci
 
 # Copy the rest of the application code into the working directory
 COPY . .
-# Use an explicit build argument when supplied; otherwise Vite loads .env.production.
-ARG VITE_API_BASE_URL
-RUN if [ -n "$VITE_API_BASE_URL" ]; then VITE_API_BASE_URL="$VITE_API_BASE_URL" npm run build; else npm run build; fi
+RUN npm run build
 
 # PRODUCTION Stage:
 # Start with Nginx 1.27 (web server) on Alpine Linux (lightweight web server)
 FROM nginx:1.27-alpine
+# Serialize public runtime configuration before Nginx starts.
+RUN apk add --no-cache jq
+COPY docker-entrypoint.d/40-runtime-config.sh /docker-entrypoint.d/40-runtime-config.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/40-runtime-config.sh \
+    && chmod +x /docker-entrypoint.d/40-runtime-config.sh
 # Copies custom nginx.conf configuration file into the container, replacing the default configuration
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Copy the built application from the "build" stage to the Nginx web root

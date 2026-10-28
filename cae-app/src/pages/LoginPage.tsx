@@ -15,7 +15,7 @@ import {
   Link,
 } from '@mui/material'
 import { Lock, Person, Visibility, VisibilityOff } from '@mui/icons-material'
-import { ApiError, apiFetch } from '../api/client'
+import { API_BASE_URL, ApiError, apiFetch } from '../api/client'
 import { API_ROUTES } from '../api/routes'
 import caeLogo from '../assets/cae_logo.png'
 
@@ -268,7 +268,7 @@ export default function LoginPage({ onSwitchToRegister, onLoginSuccess }: { onSw
           }}
         >
           <Typography variant="caption" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-            Punto de conexión de API: {import.meta.env.VITE_API_BASE_URL}
+            Punto de conexión de API: {API_BASE_URL}
             {API_ROUTES.auth.login}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block' }}>

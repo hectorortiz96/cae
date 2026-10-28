@@ -150,7 +150,7 @@ Check the logs for MySQL startup, connection failures, or backend build errors.
 
 ### Frontend cannot reach the API
 
-- Verify the frontend was built with the correct `VITE_API_BASE_URL`.
+- Verify the frontend container has the correct `VITE_API_BASE_URL` environment variable.
 - Confirm the backend is running on `http://localhost:8080`.
 - If needed, rebuild the app:
 

@@ -44,7 +44,7 @@ This app uses environment variables plus a centralized client for API routes.
 - Environment files:
   - `.env.development` -> `VITE_API_BASE_URL=/api`
   - `.env.test` -> test API URL
-  - `.env.production` -> production API URL
+  - `.env.production` -> API URL for non-container production builds
   - `.env.example` -> template values
 - Route constants live in `src/api/routes.ts`
 - Shared request logic lives in `src/api/client.ts`
@@ -68,6 +68,21 @@ npx vite build
 
 Set the repository source/build context to `cae-app`, where the Dockerfile and
 package manifests are located. The container listens on Cloud Run's `PORT`
-environment variable (8080 by default). Vite embeds the API URL at build time;
-set the Docker build argument `VITE_API_BASE_URL` to the production API URL, or
-provide that value in `.env.production`.
+environment variable (8080 by default).
+
+Set `VITE_API_BASE_URL` in the frontend Cloud Run service's container environment
+to the public backend URL. At container startup, an entrypoint script generates
+`/runtime-config.js`, which the browser loads before React. The container fails
+to start if the variable is missing or empty. No Docker build argument or
+production environment file is required.
+
+Runtime configuration takes precedence over Vite's build-time values. Local
+development still reads `VITE_API_BASE_URL` from `.env.development`.
+Only the API URL is exposed in runtime configuration; never put secrets in it.
+The configuration response disables caching so browsers do not reuse a stale URL.
+
+Rebuild and deploy the frontend image once to install runtime configuration
+support. Subsequent URL changes only require deploying a Cloud Run revision with
+the updated container environment variable, not rebuilding the image.
+Remove any `VITE_API_BASE_URL` build argument and `_API_BASE_URL` substitution
+previously added to Cloud Build; they are no longer used.

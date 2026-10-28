@@ -1,7 +1,8 @@
 // Shared API client helper for frontend requests.
 import { getToken, logout } from '../utils/authUtils';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const API_BASE_URL =
+  window.__RUNTIME_CONFIG__?.VITE_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL;
 
 if (!API_BASE_URL) {
   throw new Error('Missing VITE_API_BASE_URL environment variable');
